@@ -74,7 +74,7 @@ async function carregarDevocional(data) {
 function renderizarDevocional(d) {
   document.getElementById('cardDate').textContent = formatarDataBR(d.data);
   document.getElementById('versiculoRef').textContent = d.versiculo_referencia;
-  document.getElementById('versiculoTexto').textContent = `"${d.versiculo_texto}"`;
+  document.getElementById('versiculoTexto').textContent = d.versiculo_texto;
   document.getElementById('reflexao').textContent = d.reflexao;
   document.getElementById('pratica').textContent = d.pratica;
 
@@ -92,22 +92,13 @@ function renderizarDevocional(d) {
     videoSection.classList.add('hidden');
   }
 
-  // Atualiza dots de navegação
-  document.querySelectorAll('.dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === 1);
-  });
-
-  // Anima a entrada do card
+  // Animação de entrada
   const card = document.getElementById('devocionalCard');
-  card.style.opacity = '0';
-  card.style.transform = 'translateY(12px)';
-  requestAnimationFrame(() => {
-    card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-    card.style.opacity = '1';
-    card.style.transform = 'translateY(0)';
-  });
+  card.classList.remove('card-enter');
+  void card.offsetWidth; // reflow
+  card.classList.add('card-enter');
 
-  document.title = `${d.versiculo_referencia} — IVT Devocional`;
+  document.title = `${d.versiculo_referencia} — Devocional`;
 }
 
 // ── Navegação por data ─────────────────────────────────────────────────────

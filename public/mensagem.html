@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Devocional Diário - IVT</title>
+  <title>Devocional Diário</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/mensagem.css" />
 </head>
 <body>
   <div class="background"></div>
 
   <div class="app-container">
+
     <!-- Header -->
     <header class="app-header">
       <img src="/img/logo.png" alt="Logo" class="logo-img" />
@@ -22,106 +24,110 @@
       </div>
     </header>
 
-    <!-- Card principal -->
+    <!-- Card container -->
     <main class="card-container" id="cardContainer">
+
       <!-- Skeleton loader -->
       <div class="card skeleton-card" id="skeletonCard">
-        <div class="sk-date"></div>
-        <div class="sk-title"></div>
-        <div class="sk-text"></div>
-        <div class="sk-text short"></div>
-        <div class="sk-section"></div>
-        <div class="sk-text"></div>
-        <div class="sk-text"></div>
-        <div class="sk-text short"></div>
+        <div class="sk-block sk-date"></div>
+        <div class="sk-block sk-title"></div>
+        <div class="sk-block sk-verse"></div>
+        <div class="sk-block sk-verse sm"></div>
+        <div class="sk-block sk-label"></div>
+        <div class="sk-block sk-text"></div>
+        <div class="sk-block sk-text sm"></div>
+        <div class="sk-block sk-label"></div>
+        <div class="sk-block sk-text"></div>
+        <div class="sk-block sk-text sm"></div>
       </div>
 
       <!-- Card do devocional -->
       <div class="card devocional-card hidden" id="devocionalCard">
-        <div class="card-date" id="cardDate">• carregando •</div>
 
-        <section class="card-section verso">
-          <div class="section-icon">📖</div>
-          <h2 class="section-title" id="versiculoRef">—</h2>
-          <blockquote class="versiculo-texto" id="versiculoTexto">
-            "..."
-          </blockquote>
-        </section>
+        <!-- Hero: data + versículo -->
+        <div class="card-hero">
+          <div class="card-date" id="cardDate">• carregando •</div>
+          <div class="versiculo-ref" id="versiculoRef">—</div>
+          <blockquote class="versiculo-texto" id="versiculoTexto"></blockquote>
+        </div>
 
-        <div class="divider"></div>
+        <!-- Corpo: reflexão + prática -->
+        <div class="card-body">
 
-        <section class="card-section">
-          <div class="section-icon">💬</div>
-          <h2 class="section-title">Reflexão</h2>
-          <p class="section-body" id="reflexao">—</p>
-        </section>
+          <div class="card-section">
+            <div class="section-label">
+              <span class="section-label-text">Reflexão</span>
+              <div class="section-label-line"></div>
+            </div>
+            <p class="section-body" id="reflexao">—</p>
+          </div>
 
-        <div class="divider"></div>
+          <div class="ornament">· · ·</div>
 
-        <section class="card-section">
-          <div class="section-icon">📝</div>
-          <h2 class="section-title">Prática</h2>
-          <p class="section-body" id="pratica">—</p>
-        </section>
+          <div class="card-section">
+            <div class="section-label">
+              <span class="section-label-text">Prática</span>
+              <div class="section-label-line"></div>
+            </div>
+            <p class="section-body" id="pratica">—</p>
+          </div>
 
-        <div class="tema-badge" id="temaBadge"></div>
+          <div class="tema-badge" id="temaBadge"></div>
+        </div>
 
-        <!-- Vídeo do YouTube -->
+        <!-- Vídeo YouTube (aparece só quando houver) -->
         <div class="video-section hidden" id="videoSection">
-          <div class="divider"></div>
-          <div class="section-icon">▶️</div>
-          <h2 class="section-title">Devocional em Vídeo</h2>
+          <div class="video-section-label"><span>Devocional em Vídeo</span></div>
           <div class="video-wrapper">
             <iframe id="youtubePlayer" src="" frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen loading="lazy"></iframe>
           </div>
         </div>
+
       </div>
 
       <!-- Erro -->
       <div class="card error-card hidden" id="errorCard">
-        <div class="error-icon">📵</div>
+        <div class="error-icon">🕊️</div>
         <h2>Devocional não disponível</h2>
         <p>O devocional de hoje ainda não foi publicado. Volte mais tarde ou entre em contato com a equipe.</p>
         <button class="btn-retry" onclick="carregarDevocional()">Tentar novamente</button>
       </div>
+
     </main>
 
-    <!-- Ações -->
-    <footer class="card-actions" id="cardActions">
+    <!-- Botões de ação -->
+    <footer class="card-actions">
       <button class="action-btn" onclick="compartilhar()" title="Compartilhar">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
         </svg>
       </button>
       <button class="action-btn" onclick="copiarVersiculo()" title="Copiar versículo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
         </svg>
       </button>
-      <button class="action-btn" onclick="navegarData(-1)" title="Devocional anterior">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="action-btn" onclick="navegarData(-1)" title="Dia anterior">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
-      <button class="action-btn" onclick="navegarData(1)" title="Próximo devocional" id="btnProximo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="action-btn" onclick="navegarData(1)" title="Próximo dia" id="btnProximo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </button>
     </footer>
 
-    <div class="deslize-hint">
-      Aproxime sua pulseira para receber a mensagem do dia
-    </div>
+    <div class="deslize-hint">Aproxime sua pulseira para receber a mensagem do dia</div>
+
   </div>
 
-  <!-- Toast notification -->
   <div class="toast" id="toast"></div>
-
   <script src="/js/mensagem.js"></script>
 </body>
 </html>
