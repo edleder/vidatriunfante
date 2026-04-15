@@ -104,11 +104,10 @@ body {
   box-shadow: 0 0 8px rgba(201,169,110,0.6);
 }
 
-/* ── Card container ───────────────────────────────────────────────────────── */
-.card-container {
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
+/* ── Skeleton e erro (fora do slider) ────────────────────────────────────── */
+.skeleton-card,
+.error-card {
+  flex-shrink: 0;
 }
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
@@ -284,17 +283,124 @@ body {
 .tema-badge::before { content: '✦'; font-size: 9px; }
 .tema-badge:empty { display: none; }
 
-/* ── Vídeo YouTube ────────────────────────────────────────────────────────── */
-.video-section {
-  padding: 0 28px 28px;
-  background: var(--card-bg);
+/* ── Slider de páginas ────────────────────────────────────────────────────── */
+.slider-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
+
+.slider-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slider-track.on-video { transform: translateX(-50%); }
+
+.slide {
+  width: 50%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Seta para o vídeo ────────────────────────────────────────────────────── */
+.video-arrow {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(201,169,110,0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,169,110,0.25);
+  border-radius: 100px 0 0 100px;
+  padding: 14px 20px 14px 14px;
+  cursor: pointer;
+  color: var(--gold-light);
+  z-index: 10;
+  transition: all 0.25s;
+  animation: pulseArrow 2.5s ease-in-out infinite;
+}
+
+.back-arrow {
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(201,169,110,0.12);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,169,110,0.25);
+  border-radius: 0 100px 100px 0;
+  padding: 14px 14px 14px 20px;
+  cursor: pointer;
+  color: var(--gold-light);
+  z-index: 10;
+  transition: all 0.25s;
+}
+
+.video-arrow:hover,
+.back-arrow:hover {
+  background: rgba(201,169,110,0.25);
+  border-color: rgba(201,169,110,0.5);
+}
+
+.video-arrow-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.video-arrow-inner span {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+@keyframes pulseArrow {
+  0%, 100% { opacity: 1; right: -14px; }
+  50%       { opacity: 0.7; right: -10px; }
+}
+
+/* ── Dots de página ───────────────────────────────────────────────────────── */
+.page-dots {
+  position: absolute;
+  right: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.pdot.active {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(201,169,110,0.6);
+}
+
+/* ── Vídeo card ───────────────────────────────────────────────────────────── */
+.video-card { margin-right: 18px; }
+
+.video-hero { padding-bottom: 20px; }
 
 .video-section-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .video-section-label span {
@@ -303,6 +409,7 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold-dark);
+  white-space: nowrap;
 }
 
 .video-section-label::before,
@@ -310,12 +417,10 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border));
 }
 
-.video-section-label::after {
-  background: linear-gradient(90deg, var(--border), transparent);
-}
+.video-section-label::before { background: linear-gradient(90deg, transparent, var(--border)); }
+.video-section-label::after  { background: linear-gradient(90deg, var(--border), transparent); }
 
 .video-wrapper {
   position: relative;
@@ -324,7 +429,7 @@ body {
   border-radius: 16px;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
 .video-wrapper iframe {

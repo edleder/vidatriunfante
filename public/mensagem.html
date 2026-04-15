@@ -17,88 +17,119 @@
     <!-- Header -->
     <header class="app-header">
       <img src="/img/logo.png" alt="Logo" class="logo-img" />
-      <div class="header-dots">
-        <span class="dot active"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
+      <div class="page-dots" id="pageDots">
+        <span class="pdot active" data-page="0"></span>
+        <span class="pdot hidden" data-page="1" id="dotVideo"></span>
       </div>
     </header>
 
-    <!-- Card container -->
-    <main class="card-container" id="cardContainer">
+    <!-- Skeleton loader (fora do slider) -->
+    <div class="card skeleton-card" id="skeletonCard">
+      <div class="sk-block sk-date"></div>
+      <div class="sk-block sk-title"></div>
+      <div class="sk-block sk-verse"></div>
+      <div class="sk-block sk-verse sm"></div>
+      <div class="sk-block sk-label"></div>
+      <div class="sk-block sk-text"></div>
+      <div class="sk-block sk-text sm"></div>
+      <div class="sk-block sk-label"></div>
+      <div class="sk-block sk-text"></div>
+      <div class="sk-block sk-text sm"></div>
+    </div>
 
-      <!-- Skeleton loader -->
-      <div class="card skeleton-card" id="skeletonCard">
-        <div class="sk-block sk-date"></div>
-        <div class="sk-block sk-title"></div>
-        <div class="sk-block sk-verse"></div>
-        <div class="sk-block sk-verse sm"></div>
-        <div class="sk-block sk-label"></div>
-        <div class="sk-block sk-text"></div>
-        <div class="sk-block sk-text sm"></div>
-        <div class="sk-block sk-label"></div>
-        <div class="sk-block sk-text"></div>
-        <div class="sk-block sk-text sm"></div>
-      </div>
+    <!-- Erro -->
+    <div class="card error-card hidden" id="errorCard">
+      <div class="error-icon">🕊️</div>
+      <h2>Devocional não disponível</h2>
+      <p>O devocional de hoje ainda não foi publicado. Volte mais tarde ou entre em contato com a equipe.</p>
+      <button class="btn-retry" onclick="carregarDevocional()">Tentar novamente</button>
+    </div>
 
-      <!-- Card do devocional -->
-      <div class="card devocional-card hidden" id="devocionalCard">
+    <!-- Slider de páginas -->
+    <div class="slider-viewport hidden" id="sliderViewport">
+      <div class="slider-track" id="sliderTrack">
 
-        <!-- Hero: data + versículo -->
-        <div class="card-hero">
-          <div class="card-date" id="cardDate">• carregando •</div>
-          <div class="versiculo-ref" id="versiculoRef">—</div>
-          <blockquote class="versiculo-texto" id="versiculoTexto"></blockquote>
-        </div>
+        <!-- Página 1: Devocional -->
+        <div class="slide" id="slideDevo">
+          <main class="card devocional-card" id="devocionalCard">
 
-        <!-- Corpo: reflexão + prática -->
-        <div class="card-body">
-
-          <div class="card-section">
-            <div class="section-label">
-              <span class="section-label-text">Reflexão</span>
-              <div class="section-label-line"></div>
+            <div class="card-hero">
+              <div class="card-date" id="cardDate">• carregando •</div>
+              <div class="versiculo-ref" id="versiculoRef">—</div>
+              <blockquote class="versiculo-texto" id="versiculoTexto"></blockquote>
             </div>
-            <p class="section-body" id="reflexao">—</p>
-          </div>
 
-          <div class="ornament">· · ·</div>
+            <div class="card-body">
+              <div class="card-section">
+                <div class="section-label">
+                  <span class="section-label-text">Reflexão</span>
+                  <div class="section-label-line"></div>
+                </div>
+                <p class="section-body" id="reflexao">—</p>
+              </div>
 
-          <div class="card-section">
-            <div class="section-label">
-              <span class="section-label-text">Prática</span>
-              <div class="section-label-line"></div>
+              <div class="ornament">· · ·</div>
+
+              <div class="card-section">
+                <div class="section-label">
+                  <span class="section-label-text">Prática</span>
+                  <div class="section-label-line"></div>
+                </div>
+                <p class="section-body" id="pratica">—</p>
+              </div>
+
+              <div class="tema-badge" id="temaBadge"></div>
             </div>
-            <p class="section-body" id="pratica">—</p>
-          </div>
 
-          <div class="tema-badge" id="temaBadge"></div>
+          </main>
+
+          <!-- Seta para vídeo (só aparece quando tem vídeo) -->
+          <button class="video-arrow hidden" id="videoArrow" onclick="irParaVideo()" aria-label="Ver vídeo">
+            <div class="video-arrow-inner">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <span>Vídeo</span>
+            </div>
+          </button>
         </div>
 
-        <!-- Vídeo YouTube (aparece só quando houver) -->
-        <div class="video-section hidden" id="videoSection">
-          <div class="video-section-label"><span>Devocional em Vídeo</span></div>
-          <div class="video-wrapper">
-            <iframe id="youtubePlayer" src="" frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen loading="lazy"></iframe>
+        <!-- Página 2: Vídeo -->
+        <div class="slide hidden" id="slideVideo">
+          <div class="card video-card">
+
+            <div class="card-hero video-hero">
+              <div class="card-date" id="videoDate">—</div>
+              <div class="versiculo-ref" id="videoRef">—</div>
+            </div>
+
+            <div class="card-body">
+              <div class="video-section-label"><span>Devocional em Vídeo</span></div>
+              <div class="video-wrapper">
+                <iframe id="youtubePlayer" src="" frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen loading="lazy"></iframe>
+              </div>
+            </div>
+
           </div>
+
+          <!-- Seta para voltar -->
+          <button class="back-arrow" onclick="irParaDevo()" aria-label="Voltar">
+            <div class="video-arrow-inner">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              <span>Texto</span>
+            </div>
+          </button>
         </div>
 
-      </div>
-
-      <!-- Erro -->
-      <div class="card error-card hidden" id="errorCard">
-        <div class="error-icon">🕊️</div>
-        <h2>Devocional não disponível</h2>
-        <p>O devocional de hoje ainda não foi publicado. Volte mais tarde ou entre em contato com a equipe.</p>
-        <button class="btn-retry" onclick="carregarDevocional()">Tentar novamente</button>
-      </div>
-
-    </main>
+      </div><!-- slider-track -->
+    </div><!-- slider-viewport -->
 
     <!-- Botões de ação -->
-    <footer class="card-actions">
+    <footer class="card-actions" id="cardActions">
       <button class="action-btn" onclick="compartilhar()" title="Compartilhar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
