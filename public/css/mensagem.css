@@ -239,6 +239,10 @@ body {
   color: var(--gold-dark);
 }
 
+#versiculoRef::before   { content: '📖 '; }
+#labelReflexao::before  { content: '💭 '; }
+#labelPratica::before   { content: '📘 '; }
+
 .section-label-line {
   flex: 1;
   height: 1px;
