@@ -6,20 +6,27 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-async function gerarDevocional(data) {
+async function gerarDevocional(data, tipo = 'geral') {
   const dataObj = data ? new Date(data + 'T12:00:00') : new Date();
   const dataStr = dataObj.toISOString().split('T')[0];
+  const tabela  = tipo === 'hfc' ? 'devocionais_hfc' : 'devocionais';
 
   // Verifica se já existe
-  const existente = db.prepare('SELECT * FROM devocionais WHERE data = ?').get(dataStr);
+  const existente = db.prepare(`SELECT * FROM ${tabela} WHERE data = ?`).get(dataStr);
   if (existente) {
-    console.log(`Devocional para ${dataStr} já existe.`);
+    console.log(`Devocional ${tipo} para ${dataStr} já existe.`);
     return existente;
   }
 
-  console.log(`Gerando devocional para ${dataStr}...`);
+  console.log(`Gerando devocional ${tipo} para ${dataStr}...`);
 
-  const prompt = `Você é um pastor evangélico brasileiro criando um devocional diário para membros de uma igreja.
+  const contextoHFC = tipo === 'hfc'
+    ? 'Este devocional é especificamente para o grupo HFC (Homens de Fé e Caráter) — homens cristãos buscando ser líderes piedosos em suas famílias e comunidades. Aborde temas como paternidade, liderança servil, integridade, coragem e fé masculina.'
+    : 'Este devocional é para todos os membros da igreja.';
+
+  const prompt = `Você é um pastor evangélico brasileiro criando um devocional diário. ${contextoHFC}
+
+Você é um pastor evangélico brasileiro criando um devocional diário para membros de uma igreja.
 
 Gere um devocional completo para hoje (${dataStr}) com:
 1. Um versículo bíblico (preferencialmente do Novo Testamento ou Salmos)
@@ -64,19 +71,10 @@ Importante:
   const devocional = JSON.parse(jsonMatch[0]);
 
   // Salva no banco
-  const stmt = db.prepare(`
-    INSERT OR REPLACE INTO devocionais (data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema)
+  db.prepare(`
+    INSERT OR REPLACE INTO ${tabela} (data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema)
     VALUES (?, ?, ?, ?, ?, ?)
-  `);
-
-  stmt.run(
-    dataStr,
-    devocional.versiculo_referencia,
-    devocional.versiculo_texto,
-    devocional.reflexao,
-    devocional.pratica,
-    devocional.tema
-  );
+  `).run(dataStr, devocional.versiculo_referencia, devocional.versiculo_texto, devocional.reflexao, devocional.pratica, devocional.tema);
 
   console.log(`Devocional gerado com sucesso para ${dataStr}:`, devocional.versiculo_referencia);
   return devocional;

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inscrição</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/mensagem.css"/>
+  <style>
+    body { background: var(--bg-deep); }
+    .insc-container { max-width: 420px; margin: 0 auto; padding: 24px 18px 40px; }
+    .insc-card { background: var(--card-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+    .insc-hero { background: linear-gradient(160deg,#1e1508,#2a1c0a); padding: 28px 24px; text-align: center; }
+    .insc-tipo { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .insc-titulo { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #f5efe4; margin-bottom: 8px; }
+    .insc-meta { font-size: 13px; color: rgba(255,255,255,0.55); }
+    .insc-body { padding: 28px 24px; }
+    .insc-desc { font-size: 14px; color: var(--text-body); line-height: 1.7; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+    .form-group input:focus { border-color: var(--gold); }
+    .btn-insc { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px; transition: opacity 0.2s; }
+    .btn-insc:hover { opacity: 0.9; }
+    .btn-insc:disabled { opacity: 0.4; cursor: not-allowed; }
+    .success-card { text-align: center; padding: 48px 24px; }
+    .success-icon { font-size: 52px; margin-bottom: 16px; }
+    .success-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--text-ink); margin-bottom: 10px; }
+    .success-card p { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+    .vagas-badge { display: inline-block; background: rgba(201,169,110,0.12); border: 1px solid rgba(201,169,110,0.25); color: var(--gold-dark); border-radius: 100px; padding: 4px 14px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+    .erro { background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; color: #c53030; font-size: 14px; margin-top: 12px; display: none; }
+    .logo-mini { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 16px; display: block; }
+  </style>
+</head>
+<body>
+<div class="insc-container">
+  <div id="loading" style="text-align:center;padding:60px;color:rgba(255,255,255,0.4)">Carregando…</div>
+
+  <div class="insc-card hidden" id="inscCard">
+    <div class="insc-hero">
+      <img src="/img/logo.png" alt="Logo" class="logo-mini"/>
+      <div class="insc-tipo" id="inscTipo">Evento</div>
+      <div class="insc-titulo" id="inscTitulo">—</div>
+      <div class="insc-meta" id="inscMeta">—</div>
+      <div class="vagas-badge" id="inscVagas" style="display:none"></div>
+    </div>
+
+    <div class="insc-body">
+      <div class="insc-desc" id="inscDesc"></div>
+
+      <form id="formInsc" onsubmit="enviarInscricao(event)">
+        <div class="form-group"><label>Nome completo *</label><input type="text" id="iNome" placeholder="Seu nome" required/></div>
+        <div class="form-group"><label>WhatsApp *</label><input type="tel" id="iTelefone" placeholder="(11) 99999-9999" required/></div>
+        <div class="form-group"><label>E-mail (opcional)</label><input type="email" id="iEmail" placeholder="seu@email.com"/></div>
+        <button type="submit" class="btn-insc" id="btnInsc">Confirmar Inscrição</button>
+        <div class="erro" id="erroInsc"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="insc-card hidden" id="successCard">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h2>Inscrição Confirmada!</h2>
+      <p id="successMsg">Sua inscrição foi realizada com sucesso. Fique atento aos comunicados da igreja para mais informações.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const path  = window.location.pathname; // /evento/1 ou /curso/1
+  const parts = path.split('/');
+  const tipo  = parts[1]; // evento ou curso
+  const id    = parts[2];
+
+  async function carregar() {
+    const r = await fetch(`/api/${tipo}/${id}`);
+    if (!r.ok) { document.getElementById('loading').textContent = 'Não encontrado.'; return; }
+    const d = await r.json();
+
+    document.title = d.titulo + ' — IVT';
+    document.getElementById('inscTipo').textContent  = tipo === 'curso' ? 'Curso' : 'Evento';
+    document.getElementById('inscTitulo').textContent = d.titulo;
+
+    let meta = [];
+    if (d.data_evento || d.data_inicio) meta.push('📅 ' + fmt(d.data_evento || d.data_inicio));
+    if (d.horario) meta.push('🕐 ' + d.horario);
+    if (d.local)   meta.push('📍 ' + d.local);
+    document.getElementById('inscMeta').textContent = meta.join('  ·  ');
+
+    if (d.descricao) document.getElementById('inscDesc').textContent = d.descricao;
+
+    if (d.vagas) {
+      const vb = document.getElementById('inscVagas');
+      vb.textContent = `${d.vagas} vagas disponíveis`;
+      vb.style.display = 'inline-block';
+    }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('inscCard').classList.remove('hidden');
+  }
+
+  function fmt(s) {
+    if (!s) return '';
+    const [a,m,d] = s.split('-'); return `${d}/${m}/${a}`;
+  }
+
+  async function enviarInscricao(e) {
+    e.preventDefault();
+    const btn  = document.getElementById('btnInsc');
+    const erro = document.getElementById('erroInsc');
+    btn.disabled = true; btn.textContent = 'Enviando…'; erro.style.display='none';
+
+    const r = await fetch(`/api/${tipo}/${id}/inscricao`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: document.getElementById('iNome').value,
+        telefone: document.getElementById('iTelefone').value,
+        email: document.getElementById('iEmail').value,
+      })
+    });
+    const json = await r.json();
+    if (r.ok) {
+      document.getElementById('inscCard').classList.add('hidden');
+      document.getElementById('successCard').classList.remove('hidden');
+    } else {
+      erro.textContent = json.error || 'Erro ao enviar inscrição';
+      erro.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Confirmar Inscrição';
+    }
+  }
+
+  carregar();
+</script>
+</body>
+</html>

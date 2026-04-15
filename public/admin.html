@@ -1,159 +1,408 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — IVT Devocional</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/admin.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — IVT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/admin.css"/>
 </head>
 <body>
-  <!-- Login -->
-  <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <h1 class="login-logo">IVT</h1>
-      <h2>Painel Administrativo</h2>
-      <p>Insira o token de acesso para continuar</p>
-      <form onsubmit="fazerLogin(event)">
-        <input type="password" id="tokenInput" placeholder="Token de acesso" autocomplete="current-password" />
-        <button type="submit">Entrar</button>
-      </form>
-      <p class="login-hint">Dica: configure ADMIN_TOKEN no .env</p>
-    </div>
-  </div>
 
-  <!-- Painel principal -->
-  <div id="adminPanel" class="hidden">
-    <aside class="sidebar">
+<!-- ── Login ─────────────────────────────────────────────────────────────── -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">IVT</div>
+    <h2>Painel Administrativo</h2>
+    <p>Insira o token de acesso</p>
+    <form onsubmit="fazerLogin(event)">
+      <input type="password" id="tokenInput" placeholder="Token de acesso" autocomplete="current-password"/>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── Painel ─────────────────────────────────────────────────────────────── -->
+<div id="adminPanel" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
       <div class="sidebar-logo">IVT Admin</div>
-      <nav>
-        <a href="#" class="nav-item active" onclick="mostrarAba('lista')">📋 Devocionais</a>
-        <a href="#" class="nav-item" onclick="mostrarAba('novo')">✏️ Novo / Editar</a>
-        <a href="#" class="nav-item" onclick="mostrarAba('gerar')">🤖 Gerar com IA</a>
-        <a href="/mensagem" target="_blank" class="nav-item">👁️ Ver site</a>
-      </nav>
-      <button class="logout-btn" onclick="logout()">Sair</button>
-    </aside>
+      <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-label">Palavra</div>
+        <a class="nav-item" onclick="mostrarAba('devocional')"      data-aba="devocional">📖 Devocional Geral</a>
+        <a class="nav-item" onclick="mostrarAba('hfc')"             data-aba="hfc">🛡️ Devocional HFC</a>
+        <a class="nav-item" onclick="mostrarAba('gerar')"           data-aba="gerar">🤖 Gerar com IA</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Comunicação</div>
+        <a class="nav-item" onclick="mostrarAba('anuncios')"        data-aba="anuncios">📢 Anúncios</a>
+        <a class="nav-item" onclick="mostrarAba('comunicados')"     data-aba="comunicados">📋 Comunicados</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Eventos & Cursos</div>
+        <a class="nav-item" onclick="mostrarAba('eventos')"         data-aba="eventos">🎟️ Eventos</a>
+        <a class="nav-item" onclick="mostrarAba('cursos')"          data-aba="cursos">🎓 Cursos</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Comunidade</div>
+        <a class="nav-item" onclick="mostrarAba('agenda')"          data-aba="agenda">📅 Agenda</a>
+        <a class="nav-item" onclick="mostrarAba('oracao')"          data-aba="oracao">🙏 Pedidos de Oração</a>
+        <a class="nav-item" onclick="mostrarAba('playlists')"       data-aba="playlists">▶️ Playlists YouTube</a>
+      </div>
+      <div class="nav-group">
+        <a class="nav-item" href="/mensagem" target="_blank">👁️ Ver Devocional</a>
+        <a class="nav-item" href="/hfc"      target="_blank">👁️ Ver HFC</a>
+      </div>
+    </nav>
+
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrapper">
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-title" id="topbarTitle">Devocional Geral</span>
+    </div>
 
     <main class="main-content">
-      <!-- Aba: Lista -->
-      <section id="aba-lista" class="aba">
+
+      <!-- ── Devocional Geral ── -->
+      <section class="aba hidden" id="aba-devocional">
         <div class="page-header">
-          <h1>Devocionais</h1>
-          <button class="btn-primary" onclick="mostrarAba('novo')">+ Novo</button>
+          <h1>Devocional Geral</h1>
+          <button class="btn-primary" onclick="abrirFormDevocional('geral')">+ Novo</button>
         </div>
-        <div class="table-wrapper">
-          <table id="tabelaDevocionais">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Versículo</th>
-                <th>Tema</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaBody">
-              <tr><td colspan="4" class="loading-row">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="paginacao" id="paginacao"></div>
+        <div id="lista-devocional"></div>
       </section>
 
-      <!-- Aba: Novo/Editar -->
-      <section id="aba-novo" class="aba hidden">
+      <!-- ── Devocional HFC ── -->
+      <section class="aba hidden" id="aba-hfc">
         <div class="page-header">
-          <h1 id="formTitulo">Novo Devocional</h1>
+          <h1>Devocional HFC</h1>
+          <button class="btn-primary" onclick="abrirFormDevocional('hfc')">+ Novo</button>
         </div>
-        <form id="formDevocional" class="form-card" onsubmit="salvarDevocional(event)">
+        <div id="lista-hfc"></div>
+      </section>
+
+      <!-- ── Gerar com IA ── -->
+      <section class="aba hidden" id="aba-gerar">
+        <div class="page-header"><h1>Gerar com IA</h1></div>
+        <div class="form-card">
           <div class="form-row">
             <div class="form-group">
-              <label>Data *</label>
-              <input type="date" id="fData" required />
+              <label>Tipo</label>
+              <select id="gTipo">
+                <option value="geral">Devocional Geral</option>
+                <option value="hfc">Devocional HFC</option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Tema</label>
-              <input type="text" id="fTema" placeholder="ex: Fé e Confiança" />
+              <label>Data (vazio = hoje)</label>
+              <input type="date" id="gData"/>
             </div>
           </div>
-          <div class="form-group">
-            <label>Referência do versículo *</label>
-            <input type="text" id="fRef" placeholder="ex: João 3:16" required />
-          </div>
-          <div class="form-group">
-            <label>Texto do versículo *</label>
-            <textarea id="fTexto" rows="3" placeholder="Texto completo do versículo..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label>Reflexão *</label>
-            <textarea id="fReflexao" rows="4" placeholder="Reflexão sobre o versículo..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label>Prática *</label>
-            <textarea id="fPratica" rows="3" placeholder="Aplicação prática para o dia..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label>Vídeo do YouTube (opcional)</label>
-            <input type="text" id="fYoutube" placeholder="Cole a URL ou ID do vídeo — ex: https://youtu.be/CuwIYRjCafU" />
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="mostrarAba('lista')">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Aba: Gerar com IA -->
-      <section id="aba-gerar" class="aba hidden">
-        <div class="page-header">
-          <h1>Gerar com IA</h1>
-        </div>
-        <div class="form-card">
-          <p class="ia-desc">
-            Use a IA para gerar automaticamente um devocional completo para qualquer data.
-            O sistema usa o Claude para criar versículo, reflexão e prática.
-          </p>
-          <div class="form-group">
-            <label>Data (deixe em branco para hoje)</label>
-            <input type="date" id="dataGerar" />
-          </div>
-          <button class="btn-primary btn-gerar" onclick="gerarComIA()" id="btnGerar">
-            🤖 Gerar Devocional
-          </button>
-
-          <!-- Resultado -->
-          <div id="resultadoIA" class="resultado-ia hidden">
-            <h3>Devocional gerado:</h3>
-            <div class="ia-preview" id="iaPreview"></div>
-            <p class="ia-success">✅ Salvo no banco de dados automaticamente!</p>
-          </div>
-
+          <button class="btn-primary" onclick="gerarComIA()" id="btnGerar">🤖 Gerar Devocional</button>
+          <div id="resultadoIA" class="resultado-ia hidden"></div>
           <div id="erroIA" class="erro-ia hidden"></div>
         </div>
-
         <div class="form-card mt">
-          <h3>Geração em lote</h3>
-          <p>Gere devocionais para os próximos dias de uma vez.</p>
+          <h3>Geração em Lote</h3>
+          <p>Gere vários devocionais de uma vez.</p>
           <div class="form-row">
             <div class="form-group">
-              <label>Data inicial</label>
-              <input type="date" id="loteInicio" />
+              <label>Tipo</label>
+              <select id="loteTipo"><option value="geral">Geral</option><option value="hfc">HFC</option></select>
             </div>
             <div class="form-group">
-              <label>Quantidade de dias</label>
-              <input type="number" id="loteDias" value="7" min="1" max="30" />
+              <label>Data inicial</label>
+              <input type="date" id="loteInicio"/>
+            </div>
+            <div class="form-group">
+              <label>Dias</label>
+              <input type="number" id="loteDias" value="7" min="1" max="30"/>
             </div>
           </div>
           <button class="btn-secondary" onclick="gerarLote()" id="btnLote">Gerar em lote</button>
           <div id="progressoLote" class="progresso-lote hidden"></div>
         </div>
       </section>
+
+      <!-- ── Anúncios ── -->
+      <section class="aba hidden" id="aba-anuncios">
+        <div class="page-header">
+          <h1>Anúncios</h1>
+          <button class="btn-primary" onclick="abrirModal('modalAnuncio')">+ Novo</button>
+        </div>
+        <div id="lista-anuncios"></div>
+      </section>
+
+      <!-- ── Comunicados ── -->
+      <section class="aba hidden" id="aba-comunicados">
+        <div class="page-header">
+          <h1>Comunicados</h1>
+          <button class="btn-primary" onclick="abrirModal('modalComunicado')">+ Novo</button>
+        </div>
+        <div id="lista-comunicados"></div>
+      </section>
+
+      <!-- ── Eventos ── -->
+      <section class="aba hidden" id="aba-eventos">
+        <div class="page-header">
+          <h1>Eventos</h1>
+          <button class="btn-primary" onclick="abrirModal('modalEvento')">+ Novo</button>
+        </div>
+        <div id="lista-eventos"></div>
+      </section>
+
+      <!-- ── Cursos ── -->
+      <section class="aba hidden" id="aba-cursos">
+        <div class="page-header">
+          <h1>Cursos</h1>
+          <button class="btn-primary" onclick="abrirModal('modalCurso')">+ Novo</button>
+        </div>
+        <div id="lista-cursos"></div>
+      </section>
+
+      <!-- ── Agenda ── -->
+      <section class="aba hidden" id="aba-agenda">
+        <div class="page-header">
+          <h1>Agenda da Igreja</h1>
+          <button class="btn-primary" onclick="abrirModal('modalAgenda')">+ Novo</button>
+        </div>
+        <div id="lista-agenda"></div>
+      </section>
+
+      <!-- ── Oração ── -->
+      <section class="aba hidden" id="aba-oracao">
+        <div class="page-header"><h1>Pedidos de Oração</h1></div>
+        <div id="lista-oracao"></div>
+      </section>
+
+      <!-- ── Playlists ── -->
+      <section class="aba hidden" id="aba-playlists">
+        <div class="page-header">
+          <h1>Playlists YouTube</h1>
+          <button class="btn-primary" onclick="abrirModal('modalPlaylist')">+ Nova</button>
+        </div>
+        <div id="lista-playlists"></div>
+      </section>
+
     </main>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- ════════════════ MODAIS ════════════════ -->
 
-  <script src="/js/admin.js"></script>
+<!-- Modal Devocional -->
+<div class="modal hidden" id="modalDevocional">
+  <div class="modal-box large">
+    <div class="modal-header">
+      <h2 id="modalDevoTitulo">Devocional</h2>
+      <button onclick="fecharModal('modalDevocional')">✕</button>
+    </div>
+    <form onsubmit="salvarDevocional(event)">
+      <input type="hidden" id="dTipo" value="geral"/>
+      <div class="form-row">
+        <div class="form-group"><label>Data *</label><input type="date" id="dData" required/></div>
+        <div class="form-group"><label>Tema</label><input type="text" id="dTema" placeholder="ex: Fé e Confiança"/></div>
+      </div>
+      <div class="form-group"><label>Referência *</label><input type="text" id="dRef" placeholder="ex: João 3:16" required/></div>
+      <div class="form-group"><label>Versículo *</label><textarea id="dTexto" rows="3" required></textarea></div>
+      <div class="form-group"><label>Reflexão *</label><textarea id="dReflexao" rows="4" required></textarea></div>
+      <div class="form-group"><label>Prática *</label><textarea id="dPratica" rows="3" required></textarea></div>
+      <div class="form-group"><label>Vídeo YouTube (URL ou ID)</label><input type="text" id="dYoutube" placeholder="https://youtu.be/..."/></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalDevocional')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Anúncio -->
+<div class="modal hidden" id="modalAnuncio">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Anúncio</h2><button onclick="fecharModal('modalAnuncio')">✕</button></div>
+    <form onsubmit="salvarAnuncio(event)">
+      <input type="hidden" id="aId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="aTitulo" required/></div>
+      <div class="form-group"><label>Conteúdo *</label><textarea id="aConteudo" rows="4" required></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Início *</label><input type="date" id="aInicio" required/></div>
+        <div class="form-group"><label>Fim (opcional)</label><input type="date" id="aFim"/></div>
+      </div>
+      <div class="form-row">
+        <label class="check-label"><input type="checkbox" id="aDestaque"/> Destaque</label>
+        <label class="check-label"><input type="checkbox" id="aAtivo" checked/> Ativo</label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalAnuncio')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Comunicado -->
+<div class="modal hidden" id="modalComunicado">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Comunicado</h2><button onclick="fecharModal('modalComunicado')">✕</button></div>
+    <form onsubmit="salvarComunicado(event)">
+      <input type="hidden" id="cId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="cTitulo" required/></div>
+      <div class="form-group"><label>Conteúdo *</label><textarea id="cConteudo" rows="5" required></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Data *</label><input type="date" id="cData" required/></div>
+        <label class="check-label mt"><input type="checkbox" id="cImportante"/> Urgente</label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalComunicado')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Evento -->
+<div class="modal hidden" id="modalEvento">
+  <div class="modal-box large">
+    <div class="modal-header"><h2>Evento</h2><button onclick="fecharModal('modalEvento')">✕</button></div>
+    <form onsubmit="salvarEvento(event)">
+      <input type="hidden" id="eId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="eTitulo" required/></div>
+      <div class="form-group"><label>Descrição</label><textarea id="eDescricao" rows="3"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Data *</label><input type="date" id="eData" required/></div>
+        <div class="form-group"><label>Horário</label><input type="time" id="eHorario"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Local</label><input type="text" id="eLocal"/></div>
+        <div class="form-group"><label>Vagas (vazio = ilimitado)</label><input type="number" id="eVagas" min="1"/></div>
+      </div>
+      <div class="form-row">
+        <label class="check-label"><input type="checkbox" id="eGratuito" checked onchange="toggleValor('eValorBox')"/> Gratuito</label>
+        <label class="check-label"><input type="checkbox" id="eAtivo" checked/> Ativo</label>
+      </div>
+      <div class="form-group hidden" id="eValorBox"><label>Valor</label><input type="text" id="eValor" placeholder="ex: R$ 50,00"/></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalEvento')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Curso -->
+<div class="modal hidden" id="modalCurso">
+  <div class="modal-box large">
+    <div class="modal-header"><h2>Curso</h2><button onclick="fecharModal('modalCurso')">✕</button></div>
+    <form onsubmit="salvarCurso(event)">
+      <input type="hidden" id="crId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="crTitulo" required/></div>
+      <div class="form-group"><label>Descrição</label><textarea id="crDescricao" rows="3"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Início *</label><input type="date" id="crData" required/></div>
+        <div class="form-group"><label>Duração</label><input type="text" id="crDuracao" placeholder="ex: 8 semanas"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Local</label><input type="text" id="crLocal"/></div>
+        <div class="form-group"><label>Vagas</label><input type="number" id="crVagas" min="1"/></div>
+      </div>
+      <div class="form-row">
+        <label class="check-label"><input type="checkbox" id="crGratuito" checked onchange="toggleValor('crValorBox')"/> Gratuito</label>
+        <label class="check-label"><input type="checkbox" id="crAtivo" checked/> Ativo</label>
+      </div>
+      <div class="form-group hidden" id="crValorBox"><label>Valor</label><input type="text" id="crValor" placeholder="ex: R$ 50,00"/></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalCurso')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Agenda -->
+<div class="modal hidden" id="modalAgenda">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Agenda</h2><button onclick="fecharModal('modalAgenda')">✕</button></div>
+    <form onsubmit="salvarAgenda(event)">
+      <input type="hidden" id="agId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="agTitulo" required/></div>
+      <div class="form-group"><label>Descrição</label><textarea id="agDescricao" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Data *</label><input type="date" id="agData" required/></div>
+        <div class="form-group"><label>Horário</label><input type="time" id="agHorario"/></div>
+      </div>
+      <div class="form-group"><label>Local</label><input type="text" id="agLocal"/></div>
+      <label class="check-label"><input type="checkbox" id="agRecorrente"/> Recorrente (semanal)</label>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalAgenda')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Playlist -->
+<div class="modal hidden" id="modalPlaylist">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Playlist YouTube</h2><button onclick="fecharModal('modalPlaylist')">✕</button></div>
+    <form onsubmit="salvarPlaylist(event)">
+      <input type="hidden" id="plId"/>
+      <div class="form-group"><label>Título *</label><input type="text" id="plTitulo" required/></div>
+      <div class="form-group"><label>Descrição</label><textarea id="plDescricao" rows="2"></textarea></div>
+      <div class="form-group"><label>URL ou ID da Playlist *</label><input type="text" id="plUrl" placeholder="https://youtube.com/playlist?list=..." required/></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="plCategoria">
+            <option value="geral">Geral</option>
+            <option value="louvor">Louvor</option>
+            <option value="pregacao">Pregação</option>
+            <option value="devocional">Devocional</option>
+            <option value="jovens">Jovens</option>
+            <option value="hfc">HFC</option>
+          </select>
+        </div>
+        <label class="check-label mt"><input type="checkbox" id="plAtivo" checked/> Ativa</label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalPlaylist')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal QR Code -->
+<div class="modal hidden" id="modalQR">
+  <div class="modal-box qr-box">
+    <div class="modal-header"><h2 id="qrTitulo">QR Code</h2><button onclick="fecharModal('modalQR')">✕</button></div>
+    <div class="qr-container" id="qrContainer"></div>
+    <p class="qr-url" id="qrUrl"></p>
+    <button class="btn-primary" onclick="imprimirQR()">🖨️ Imprimir</button>
+  </div>
+</div>
+
+<!-- Modal Inscrições -->
+<div class="modal hidden" id="modalInscricoes">
+  <div class="modal-box large">
+    <div class="modal-header"><h2 id="inscTitulo">Inscrições</h2><button onclick="fecharModal('modalInscricoes')">✕</button></div>
+    <div id="listaInscricoes"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="overlay" onclick="fecharTodosModais()"></div>
+
+<script src="/js/admin.js"></script>
 </body>
 </html>
