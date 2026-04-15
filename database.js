@@ -16,9 +16,15 @@ db.exec(`
     reflexao TEXT NOT NULL,
     pratica TEXT NOT NULL,
     tema TEXT,
+    youtube_id TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);
+
+// Adiciona coluna youtube_id se não existir (migração)
+try {
+  db.exec('ALTER TABLE devocionais ADD COLUMN youtube_id TEXT');
+} catch (e) { /* já existe */ }
 
 // Seed com dados de exemplo se estiver vazio
 const row = db.prepare('SELECT COUNT(*) as n FROM devocionais').get();

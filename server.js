@@ -107,16 +107,16 @@ app.post('/api/admin/gerar', autenticarAdmin, async (req, res) => {
 
 // Criar/editar devocional manualmente
 app.post('/api/admin/devocional', autenticarAdmin, (req, res) => {
-  const { data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema } = req.body;
+  const { data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema, youtube_id } = req.body;
 
   if (!data || !versiculo_referencia || !versiculo_texto || !reflexao || !pratica) {
     return res.status(400).json({ error: 'Campos obrigatórios faltando' });
   }
 
   db.prepare(`
-    INSERT OR REPLACE INTO devocionais (data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema || '');
+    INSERT OR REPLACE INTO devocionais (data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema, youtube_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(data, versiculo_referencia, versiculo_texto, reflexao, pratica, tema || '', youtube_id || null);
 
   res.json({ sucesso: true });
 });

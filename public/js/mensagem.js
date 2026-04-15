@@ -81,6 +81,17 @@ function renderizarDevocional(d) {
   const badge = document.getElementById('temaBadge');
   badge.textContent = d.tema || '';
 
+  // Vídeo do YouTube
+  const videoSection = document.getElementById('videoSection');
+  const player = document.getElementById('youtubePlayer');
+  if (d.youtube_id) {
+    player.src = `https://www.youtube.com/embed/${d.youtube_id}`;
+    videoSection.classList.remove('hidden');
+  } else {
+    player.src = '';
+    videoSection.classList.add('hidden');
+  }
+
   // Atualiza dots de navegação
   document.querySelectorAll('.dot').forEach((dot, i) => {
     dot.classList.toggle('active', i === 1);

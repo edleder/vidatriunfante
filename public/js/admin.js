@@ -137,6 +137,7 @@ async function editarDevocional(data) {
   document.getElementById('fReflexao').value = d.reflexao;
   document.getElementById('fPratica').value = d.pratica;
   document.getElementById('fTema').value = d.tema || '';
+  document.getElementById('fYoutube').value = d.youtube_id ? `https://youtu.be/${d.youtube_id}` : '';
 
   mostrarAba('novo');
 }
@@ -153,6 +154,24 @@ async function deletarDevocional(data) {
   }
 }
 
+// ── Extrai ID do YouTube de qualquer formato de URL ────────────────────────
+function extrairYoutubeId(input) {
+  if (!input) return '';
+  input = input.trim();
+  // Já é um ID curto (11 chars)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+  // youtu.be/ID
+  const curto = input.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (curto) return curto[1];
+  // youtube.com/watch?v=ID
+  const longo = input.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (longo) return longo[1];
+  // youtube.com/embed/ID
+  const embed = input.match(/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embed) return embed[1];
+  return '';
+}
+
 // ── Formulário ─────────────────────────────────────────────────────────────
 async function salvarDevocional(e) {
   e.preventDefault();
@@ -164,6 +183,7 @@ async function salvarDevocional(e) {
     reflexao:             document.getElementById('fReflexao').value,
     pratica:              document.getElementById('fPratica').value,
     tema:                 document.getElementById('fTema').value,
+    youtube_id:           extrairYoutubeId(document.getElementById('fYoutube').value),
   };
 
   const res = await api('POST', '/api/admin/devocional', payload);
@@ -172,6 +192,7 @@ async function salvarDevocional(e) {
     mostrarToast('Salvo com sucesso!');
     document.getElementById('formDevocional').reset();
     document.getElementById('fData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('fYoutube').value = '';
     document.getElementById('formTitulo').textContent = 'Novo Devocional';
     mostrarAba('lista');
   } else {
