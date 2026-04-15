@@ -246,7 +246,8 @@ body {
 }
 
 .section-body {
-  font-size: 14.5px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
   line-height: 1.75;
   color: var(--text-body);
   font-weight: 400;
