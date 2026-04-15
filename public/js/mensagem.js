@@ -1,7 +1,8 @@
 // ── Estado ─────────────────────────────────────────────────────────────────
-let dataAtual   = dataHoje();
+let dataAtual       = dataHoje();
 let devocionalAtual = null;
-let paginaAtual = 0; // 0 = devocional, 1 = vídeo
+let paginaAtual     = 0; // 0 = devocional, 1 = vídeo
+const IS_HFC        = typeof HFC_MODE !== 'undefined' && HFC_MODE;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function dataHoje() {
@@ -43,9 +44,8 @@ async function carregarDevocional(data) {
   irParaDevo(false);
 
   try {
-    const url = data === dataHoje()
-      ? '/api/devocional/hoje'
-      : `/api/devocional/${data}`;
+    const base = IS_HFC ? '/api/hfc' : '/api/devocional';
+    const url  = data === dataHoje() ? `${base}/hoje` : `${base}/${data}`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error('Não encontrado');
@@ -110,7 +110,7 @@ function renderizarDevocional(d) {
   void card.offsetWidth;
   card.classList.add('card-enter');
 
-  document.title = `${d.versiculo_referencia} — Devocional`;
+  document.title = `${d.versiculo_referencia} — ${IS_HFC ? 'HFC' : 'Devocional'}`;
 }
 
 // ── Navegação entre slides ─────────────────────────────────────────────────

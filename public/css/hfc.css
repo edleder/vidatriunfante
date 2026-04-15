@@ -1,0 +1,147 @@
+/* ── HFC Theme — Homens de Fé e Caráter ──────────────────────────────────── */
+
+/* Override de cores para o tema HFC */
+.hfc-theme {
+  --gold:        #a8a8a8;
+  --gold-light:  #d0d0d0;
+  --gold-dark:   #787878;
+  --bg-deep:     #080808;
+  --bg-mid:      #101010;
+  --card-bg:     #fafafa;
+  --card-warm:   #f0f0f0;
+  --text-body:   #333333;
+  --text-muted:  #666666;
+  --text-light:  #999999;
+  --border:      #e0e0e0;
+}
+
+/* Background mais sombrio e sólido */
+.hfc-theme .background {
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 15%, rgba(80,80,80,0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 70% at 80% 85%, rgba(40,40,40,0.3) 0%, transparent 70%),
+    linear-gradient(170deg, #060606 0%, #111111 50%, #060606 100%);
+}
+
+.hfc-theme .background::after { opacity: 0.06; }
+
+/* Header centralizado com logo e tag */
+.hfc-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hfc-logo {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50%;
+  filter: drop-shadow(0 4px 20px rgba(255,255,255,0.15));
+}
+
+.hfc-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+
+/* Hero do card — preto sólido e mais dramático */
+.hfc-theme .card-hero {
+  background: linear-gradient(160deg, #0a0a0a 0%, #181818 100%);
+}
+
+.hfc-theme .card-hero::after {
+  background: linear-gradient(90deg, transparent, rgba(160,160,160,0.2), transparent);
+}
+
+.hfc-theme .card-date {
+  color: rgba(200,200,200,0.6);
+}
+
+.hfc-theme .versiculo-ref {
+  color: rgba(210,210,210,0.8);
+}
+
+.hfc-theme .versiculo-texto {
+  color: #eeeeee;
+}
+
+.hfc-theme .versiculo-texto::before,
+.hfc-theme .versiculo-texto::after {
+  color: rgba(200,200,200,0.25);
+}
+
+/* Barra do topo do card — cinza */
+.hfc-theme .card::before {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #555 20%,
+    #aaa 50%,
+    #555 80%,
+    transparent 100%);
+}
+
+/* Labels das seções */
+.hfc-theme .section-label-text { color: #555; }
+
+/* Ornamento */
+.hfc-theme .ornament { color: #aaa; opacity: 0.3; }
+
+/* Tema badge */
+.hfc-theme .tema-badge {
+  background: rgba(150,150,150,0.1);
+  border-color: rgba(150,150,150,0.2);
+  color: #555;
+}
+
+.hfc-theme .tema-badge::before { content: '🦁'; font-size: 11px; }
+
+/* Botão de retry */
+.hfc-theme .btn-retry {
+  background: linear-gradient(135deg, #333, #666);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* Action buttons */
+.hfc-theme .action-btn {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.5);
+}
+
+.hfc-theme .action-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+}
+
+/* Dots */
+.hfc-theme .pdot.active {
+  background: rgba(200,200,200,0.8);
+  box-shadow: 0 0 8px rgba(200,200,200,0.4);
+}
+
+/* Setas de vídeo */
+.hfc-theme .video-arrow,
+.hfc-theme .back-arrow {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.5);
+}
+
+.hfc-theme .video-arrow:hover,
+.hfc-theme .back-arrow:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.9);
+}
+
+/* Toast */
+.hfc-theme .toast {
+  background: #111;
+  color: rgba(220,220,220,0.9);
+  border-color: rgba(150,150,150,0.2);
+}
