@@ -165,69 +165,68 @@ const ICONES_SVG = {
 
 // ── Carrega links sociais, eventos e cursos na aba Links ───────────────────
 async function carregarLinksEventos() {
-  const containerLinks  = document.getElementById('linksSociais');
-  const containerEventos = document.getElementById('linksEventos');
+  carregarLinksSociais();
+  carregarInscricoes();
+}
 
+async function carregarLinksSociais() {
+  const container = document.getElementById('linksSociais');
+  if (!container) return;
   try {
-    const [resLk, resEv, resCr] = await Promise.all([
-      fetch('/api/links'),
+    const res   = await fetch('/api/links');
+    const links = await res.json();
+    if (links.length) {
+      container.innerHTML = links.map(lk => {
+        const icone  = ICONES_SVG[lk.icone] || ICONES_SVG.link;
+        const classe = ICONES_SVG[lk.icone] ? lk.icone : 'outro';
+        return `
+          <a class="link-item ${classe}" href="${lk.url}" target="_blank" rel="noopener">
+            <div class="link-icon">${icone}</div>
+            <div class="link-info"><span class="link-name">${lk.nome}</span></div>
+            <div class="link-arrow">›</div>
+          </a>`;
+      }).join('');
+    } else {
+      container.innerHTML = '';
+    }
+  } catch { container.innerHTML = ''; }
+}
+
+async function carregarInscricoes() {
+  const container = document.getElementById('linksEventos');
+  if (!container) return;
+  try {
+    const [resEv, resCr] = await Promise.all([
       fetch('/api/eventos'),
       fetch('/api/cursos'),
     ]);
-    const links  = await resLk.json();
     const eventos = await resEv.json();
     const cursos  = await resCr.json();
-
-    // Redes sociais
-    if (containerLinks) {
-      if (links.length) {
-        containerLinks.innerHTML = links.map(lk => {
-          const icone = ICONES_SVG[lk.icone] || ICONES_SVG.link;
-          const classe = lk.icone in ICONES_SVG ? lk.icone : 'outro';
-          return `
-            <a class="link-item ${classe}" href="${lk.url}" target="_blank" rel="noopener">
-              <div class="link-icon">${icone}</div>
-              <div class="link-info">
-                <span class="link-name">${lk.nome}</span>
-              </div>
-              <div class="link-arrow">›</div>
-            </a>`;
-        }).join('');
-      } else {
-        containerLinks.innerHTML = '';
-      }
+    const todos   = [
+      ...eventos.map(e => ({ ...e, _tipo: 'evento' })),
+      ...cursos.map(c => ({ ...c, _tipo: 'curso' })),
+    ];
+    if (todos.length) {
+      container.innerHTML = todos.map(item => {
+        const icone = item._tipo === 'curso' ? '🎓' : '🎟️';
+        const data  = item.data_evento || item.data_inicio;
+        const [a, m, d] = (data || '').split('-');
+        const dataFmt = data ? `${d}/${m}/${a}` : '';
+        const meta = [dataFmt, item.horario, item.local].filter(Boolean).join(' · ');
+        return `
+          <a class="link-event" href="/${item._tipo}/${item.id}">
+            <div class="link-event-icon">${icone}</div>
+            <div class="link-event-info">
+              <span class="link-event-name">${item.titulo}</span>
+              <span class="link-event-meta">${meta || (item._tipo === 'curso' ? 'Curso' : 'Evento')}</span>
+            </div>
+            <div class="link-arrow">›</div>
+          </a>`;
+      }).join('');
+    } else {
+      container.innerHTML = '<p class="links-empty">Nenhum evento ou curso aberto no momento.</p>';
     }
-
-    // Eventos e cursos
-    if (containerEventos) {
-      const todos = [
-        ...eventos.map(e => ({ ...e, _tipo: 'evento' })),
-        ...cursos.map(c => ({ ...c, _tipo: 'curso' })),
-      ];
-      if (todos.length) {
-        containerEventos.innerHTML = todos.map(item => {
-          const icone = item._tipo === 'curso' ? '🎓' : '🎟️';
-          const data  = item.data_evento || item.data_inicio;
-          const [a, m, d] = (data || '').split('-');
-          const dataFmt = data ? `${d}/${m}/${a}` : '';
-          const meta = [dataFmt, item.horario, item.local].filter(Boolean).join(' · ');
-          return `
-            <a class="link-event" href="/${item._tipo}/${item.id}">
-              <div class="link-event-icon">${icone}</div>
-              <div class="link-event-info">
-                <span class="link-event-name">${item.titulo}</span>
-                <span class="link-event-meta">${meta || (item._tipo === 'curso' ? 'Curso' : 'Evento')}</span>
-              </div>
-              <div class="link-arrow">›</div>
-            </a>`;
-        }).join('');
-      } else {
-        containerEventos.innerHTML = '<p class="links-empty">Nenhum evento ou curso aberto no momento.</p>';
-      }
-    }
-  } catch {
-    if (containerEventos) containerEventos.innerHTML = '<p class="links-empty">Não foi possível carregar.</p>';
-  }
+  } catch { container.innerHTML = '<p class="links-empty">Não foi possível carregar.</p>'; }
 }
 
 // ── Navegação por data ─────────────────────────────────────────────────────
