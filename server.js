@@ -78,7 +78,7 @@ app.get('/api/comunicados', (_, res) => {
 app.get('/api/eventos', (req, res) => {
   const pagina = req.query.pagina || 'geral';
   const items = db.prepare(
-    "SELECT * FROM eventos WHERE ativo = 1 AND (pagina = 'ambos' OR pagina = ?) ORDER BY data_evento ASC"
+    "SELECT * FROM eventos WHERE ativo = 1 AND (pagina IS NULL OR pagina = 'ambos' OR pagina = ?) ORDER BY data_evento ASC"
   ).all(pagina);
   res.json(items);
 });
@@ -109,7 +109,7 @@ app.post('/api/evento/:id/inscricao', (req, res) => {
 app.get('/api/cursos', (req, res) => {
   const pagina = req.query.pagina || 'geral';
   const items = db.prepare(
-    "SELECT * FROM cursos WHERE ativo = 1 AND (pagina = 'ambos' OR pagina = ?) ORDER BY data_inicio ASC"
+    "SELECT * FROM cursos WHERE ativo = 1 AND (pagina IS NULL OR pagina = 'ambos' OR pagina = ?) ORDER BY data_inicio ASC"
   ).all(pagina);
   res.json(items);
 });
