@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — IVT Devocional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <!-- Login -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1 class="login-logo">IVT</h1>
+      <h2>Painel Administrativo</h2>
+      <p>Insira o token de acesso para continuar</p>
+      <form onsubmit="fazerLogin(event)">
+        <input type="password" id="tokenInput" placeholder="Token de acesso" autocomplete="current-password" />
+        <button type="submit">Entrar</button>
+      </form>
+      <p class="login-hint">Dica: configure ADMIN_TOKEN no .env</p>
+    </div>
+  </div>
+
+  <!-- Painel principal -->
+  <div id="adminPanel" class="hidden">
+    <aside class="sidebar">
+      <div class="sidebar-logo">IVT Admin</div>
+      <nav>
+        <a href="#" class="nav-item active" onclick="mostrarAba('lista')">📋 Devocionais</a>
+        <a href="#" class="nav-item" onclick="mostrarAba('novo')">✏️ Novo / Editar</a>
+        <a href="#" class="nav-item" onclick="mostrarAba('gerar')">🤖 Gerar com IA</a>
+        <a href="/mensagem" target="_blank" class="nav-item">👁️ Ver site</a>
+      </nav>
+      <button class="logout-btn" onclick="logout()">Sair</button>
+    </aside>
+
+    <main class="main-content">
+      <!-- Aba: Lista -->
+      <section id="aba-lista" class="aba">
+        <div class="page-header">
+          <h1>Devocionais</h1>
+          <button class="btn-primary" onclick="mostrarAba('novo')">+ Novo</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="tabelaDevocionais">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Versículo</th>
+                <th>Tema</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaBody">
+              <tr><td colspan="4" class="loading-row">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="paginacao" id="paginacao"></div>
+      </section>
+
+      <!-- Aba: Novo/Editar -->
+      <section id="aba-novo" class="aba hidden">
+        <div class="page-header">
+          <h1 id="formTitulo">Novo Devocional</h1>
+        </div>
+        <form id="formDevocional" class="form-card" onsubmit="salvarDevocional(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Data *</label>
+              <input type="date" id="fData" required />
+            </div>
+            <div class="form-group">
+              <label>Tema</label>
+              <input type="text" id="fTema" placeholder="ex: Fé e Confiança" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Referência do versículo *</label>
+            <input type="text" id="fRef" placeholder="ex: João 3:16" required />
+          </div>
+          <div class="form-group">
+            <label>Texto do versículo *</label>
+            <textarea id="fTexto" rows="3" placeholder="Texto completo do versículo..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Reflexão *</label>
+            <textarea id="fReflexao" rows="4" placeholder="Reflexão sobre o versículo..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Prática *</label>
+            <textarea id="fPratica" rows="3" placeholder="Aplicação prática para o dia..." required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="mostrarAba('lista')">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Aba: Gerar com IA -->
+      <section id="aba-gerar" class="aba hidden">
+        <div class="page-header">
+          <h1>Gerar com IA</h1>
+        </div>
+        <div class="form-card">
+          <p class="ia-desc">
+            Use a IA para gerar automaticamente um devocional completo para qualquer data.
+            O sistema usa o Claude para criar versículo, reflexão e prática.
+          </p>
+          <div class="form-group">
+            <label>Data (deixe em branco para hoje)</label>
+            <input type="date" id="dataGerar" />
+          </div>
+          <button class="btn-primary btn-gerar" onclick="gerarComIA()" id="btnGerar">
+            🤖 Gerar Devocional
+          </button>
+
+          <!-- Resultado -->
+          <div id="resultadoIA" class="resultado-ia hidden">
+            <h3>Devocional gerado:</h3>
+            <div class="ia-preview" id="iaPreview"></div>
+            <p class="ia-success">✅ Salvo no banco de dados automaticamente!</p>
+          </div>
+
+          <div id="erroIA" class="erro-ia hidden"></div>
+        </div>
+
+        <div class="form-card mt">
+          <h3>Geração em lote</h3>
+          <p>Gere devocionais para os próximos dias de uma vez.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Data inicial</label>
+              <input type="date" id="loteInicio" />
+            </div>
+            <div class="form-group">
+              <label>Quantidade de dias</label>
+              <input type="number" id="loteDias" value="7" min="1" max="30" />
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="gerarLote()" id="btnLote">Gerar em lote</button>
+          <div id="progressoLote" class="progresso-lote hidden"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
