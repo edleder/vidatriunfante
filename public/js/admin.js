@@ -48,7 +48,8 @@ const ABA_TITULOS = {
   devocional: 'Devocional Geral', hfc: 'Devocional HFC', gerar: 'Gerar com IA',
   anuncios: 'Anúncios', comunicados: 'Comunicados',
   eventos: 'Eventos', cursos: 'Cursos',
-  agenda: 'Agenda', oracao: 'Pedidos de Oração', playlists: 'Playlists YouTube'
+  agenda: 'Agenda', oracao: 'Pedidos de Oração', playlists: 'Playlists YouTube',
+  links: 'Links & Redes Sociais',
 };
 const ABA_LOADERS = {
   devocional: () => carregarDevocionais('geral'),
@@ -60,6 +61,7 @@ const ABA_LOADERS = {
   agenda:     carregarAgenda,
   oracao:     carregarOracao,
   playlists:  carregarPlaylists,
+  links:      carregarLinks,
 };
 
 function mostrarAba(nome) {
@@ -559,6 +561,63 @@ async function salvarPlaylist(e) {
   });
   if (r.ok) { mostrarToast('Salvo!'); fecharModal('modalPlaylist'); carregarPlaylists(); document.getElementById('plId').value=''; }
   else mostrarToast('Erro ao salvar');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// LINKS & REDES SOCIAIS
+// ══════════════════════════════════════════════════════════════════════
+const ICONE_LABELS = { instagram: 'Instagram', youtube: 'YouTube', whatsapp: 'WhatsApp', facebook: 'Facebook', tiktok: 'TikTok', link: 'Genérico' };
+
+async function carregarLinks() {
+  const r = await api('GET', '/api/admin/links');
+  const lista = await r.json();
+  const c = document.getElementById('lista-links');
+  if (!lista.length) { c.innerHTML = '<div class="data-table"><table><tr><td class="empty">Nenhum link cadastrado</td></tr></table></div>'; return; }
+  c.innerHTML = `<div class="data-table"><table>
+    <thead><tr><th>Nome</th><th>URL</th><th>Ícone</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>${lista.map(lk => `<tr>
+      <td><strong>${lk.nome}</strong></td>
+      <td><a href="${lk.url}" target="_blank" rel="noopener" style="color:var(--gold);word-break:break-all">${lk.url}</a></td>
+      <td>${ICONE_LABELS[lk.icone] || lk.icone}</td>
+      <td>${lk.ordem}</td>
+      <td><span class="badge ${lk.ativo ? 'badge-green' : 'badge-gray'}">${lk.ativo ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn-icon" onclick='editarLink(${JSON.stringify(lk)})'>✏️</button>
+        <button class="btn-icon danger" onclick="deletar('link',${lk.id},carregarLinks)">🗑️</button>
+      </td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function editarLink(lk) {
+  document.getElementById('lId').value = lk.id;
+  document.getElementById('lNome').value = lk.nome;
+  document.getElementById('lUrl').value = lk.url;
+  document.getElementById('lIcone').value = lk.icone || 'link';
+  document.getElementById('lOrdem').value = lk.ordem || 0;
+  document.getElementById('lAtivo').checked = !!lk.ativo;
+  document.getElementById('modalLinkTitulo').textContent = 'Editar Link';
+  abrirModal('modalLink');
+}
+
+async function salvarLink(e) {
+  e.preventDefault();
+  const r = await api('POST', '/api/admin/link', {
+    id: document.getElementById('lId').value || null,
+    nome: document.getElementById('lNome').value,
+    url: document.getElementById('lUrl').value,
+    icone: document.getElementById('lIcone').value,
+    ordem: parseInt(document.getElementById('lOrdem').value) || 0,
+    ativo: document.getElementById('lAtivo').checked,
+  });
+  if (r.ok) {
+    mostrarToast('Salvo!');
+    fecharModal('modalLink');
+    carregarLinks();
+    document.getElementById('lId').value = '';
+    document.getElementById('modalLinkTitulo').textContent = 'Novo Link';
+  } else {
+    mostrarToast('Erro ao salvar');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════

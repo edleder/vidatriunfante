@@ -155,6 +155,12 @@ app.get('/api/oracao/publicos', (_, res) => {
   res.json(items);
 });
 
+// Links sociais (públicos)
+app.get('/api/links', (_, res) => {
+  const items = db.prepare('SELECT * FROM links_sociais WHERE ativo = 1 ORDER BY ordem, nome').all();
+  res.json(items);
+});
+
 // ── QR Codes ──────────────────────────────────────────────────────────────────
 app.get('/api/qrcode/evento/:id', async (req, res) => {
   const url = `${BASE_URL}/evento/${req.params.id}`;
@@ -332,6 +338,27 @@ app.post('/api/admin/agenda', auth, (req, res) => {
 });
 app.delete('/api/admin/agenda/:id', auth, (req, res) => {
   db.prepare('DELETE FROM agenda WHERE id=?').run(req.params.id);
+  res.json({ sucesso: true });
+});
+
+// ── Links Sociais Admin ──
+app.get('/api/admin/links', auth, (_, res) => {
+  res.json(db.prepare('SELECT * FROM links_sociais ORDER BY ordem, nome').all());
+});
+app.post('/api/admin/link', auth, (req, res) => {
+  const { id, nome, url, icone, ordem, ativo } = req.body;
+  if (!nome || !url) return res.status(400).json({ error: 'Nome e URL obrigatórios' });
+  if (id) {
+    db.prepare('UPDATE links_sociais SET nome=?,url=?,icone=?,ordem=?,ativo=? WHERE id=?')
+      .run(nome, url, icone||'link', ordem||0, ativo?1:0, id);
+  } else {
+    db.prepare('INSERT INTO links_sociais (nome,url,icone,ordem,ativo) VALUES (?,?,?,?,?)')
+      .run(nome, url, icone||'link', ordem||0, ativo?1:0);
+  }
+  res.json({ sucesso: true });
+});
+app.delete('/api/admin/link/:id', auth, (req, res) => {
+  db.prepare('DELETE FROM links_sociais WHERE id=?').run(req.params.id);
   res.json({ sucesso: true });
 });
 

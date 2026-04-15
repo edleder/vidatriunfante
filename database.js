@@ -141,6 +141,17 @@ db.exec(`
     dia_semana TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
+
+  -- Links de redes sociais e outros
+  CREATE TABLE IF NOT EXISTS links_sociais (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    url TEXT NOT NULL,
+    icone TEXT DEFAULT 'link',
+    ordem INTEGER DEFAULT 0,
+    ativo INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // Migrações
@@ -148,6 +159,13 @@ const migrações = [
   'ALTER TABLE devocionais ADD COLUMN youtube_id TEXT',
 ];
 migrações.forEach(sql => { try { db.exec(sql); } catch {} });
+
+// Seed links sociais
+const rowLinks = db.prepare('SELECT COUNT(*) as n FROM links_sociais').get();
+if (rowLinks.n === 0) {
+  db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('Instagram', 'https://www.instagram.com/ap.isaqueoficial/', 'instagram', 1);
+  db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('YouTube', 'https://www.youtube.com/@prisaqueoficial', 'youtube', 2);
+}
 
 // Seed devocional inicial
 const row = db.prepare('SELECT COUNT(*) as n FROM devocionais').get();
