@@ -303,6 +303,14 @@
         <label class="check-label"><input type="checkbox" id="eAtivo" checked/> Ativo</label>
       </div>
       <div class="form-group hidden" id="eValorBox"><label>Valor</label><input type="text" id="eValor" placeholder="ex: R$ 50,00"/></div>
+      <div class="form-group">
+        <label>Exibir em</label>
+        <select id="ePagina">
+          <option value="ambos">Devocional Geral + HFC</option>
+          <option value="geral">Somente Devocional Geral</option>
+          <option value="hfc">Somente HFC</option>
+        </select>
+      </div>
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="fecharModal('modalEvento')">Cancelar</button>
         <button type="submit" class="btn-primary">Salvar</button>
@@ -332,6 +340,14 @@
         <label class="check-label"><input type="checkbox" id="crAtivo" checked/> Ativo</label>
       </div>
       <div class="form-group hidden" id="crValorBox"><label>Valor</label><input type="text" id="crValor" placeholder="ex: R$ 50,00"/></div>
+      <div class="form-group">
+        <label>Exibir em</label>
+        <select id="crPagina">
+          <option value="ambos">Devocional Geral + HFC</option>
+          <option value="geral">Somente Devocional Geral</option>
+          <option value="hfc">Somente HFC</option>
+        </select>
+      </div>
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="fecharModal('modalCurso')">Cancelar</button>
         <button type="submit" class="btn-primary">Salvar</button>

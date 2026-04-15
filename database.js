@@ -157,6 +157,8 @@ db.exec(`
 // Migrações
 const migrações = [
   'ALTER TABLE devocionais ADD COLUMN youtube_id TEXT',
+  "ALTER TABLE eventos ADD COLUMN pagina TEXT DEFAULT 'ambos'",
+  "ALTER TABLE cursos  ADD COLUMN pagina TEXT DEFAULT 'ambos'",
 ];
 migrações.forEach(sql => { try { db.exec(sql); } catch {} });
 

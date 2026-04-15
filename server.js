@@ -75,8 +75,11 @@ app.get('/api/comunicados', (_, res) => {
 });
 
 // Eventos públicos
-app.get('/api/eventos', (_, res) => {
-  const items = db.prepare('SELECT * FROM eventos WHERE ativo = 1 ORDER BY data_evento ASC').all();
+app.get('/api/eventos', (req, res) => {
+  const pagina = req.query.pagina || 'geral';
+  const items = db.prepare(
+    "SELECT * FROM eventos WHERE ativo = 1 AND (pagina = 'ambos' OR pagina = ?) ORDER BY data_evento ASC"
+  ).all(pagina);
   res.json(items);
 });
 app.get('/api/evento/:id', (req, res) => {
@@ -103,8 +106,11 @@ app.post('/api/evento/:id/inscricao', (req, res) => {
 });
 
 // Cursos públicos
-app.get('/api/cursos', (_, res) => {
-  const items = db.prepare('SELECT * FROM cursos WHERE ativo = 1 ORDER BY data_inicio ASC').all();
+app.get('/api/cursos', (req, res) => {
+  const pagina = req.query.pagina || 'geral';
+  const items = db.prepare(
+    "SELECT * FROM cursos WHERE ativo = 1 AND (pagina = 'ambos' OR pagina = ?) ORDER BY data_inicio ASC"
+  ).all(pagina);
   res.json(items);
 });
 app.get('/api/curso/:id', (req, res) => {
@@ -256,14 +262,15 @@ app.get('/api/admin/eventos', auth, (_, res) => {
   res.json(db.prepare('SELECT * FROM eventos ORDER BY data_evento DESC').all());
 });
 app.post('/api/admin/evento', auth, (req, res) => {
-  const { id, titulo, descricao, data_evento, horario, local, vagas, gratuito, valor, ativo } = req.body;
+  const { id, titulo, descricao, data_evento, horario, local, vagas, gratuito, valor, ativo, pagina } = req.body;
   if (!titulo || !data_evento) return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+  const pg = ['geral','hfc','ambos'].includes(pagina) ? pagina : 'ambos';
   if (id) {
-    db.prepare('UPDATE eventos SET titulo=?,descricao=?,data_evento=?,horario=?,local=?,vagas=?,gratuito=?,valor=?,ativo=? WHERE id=?')
-      .run(titulo,descricao||'',data_evento,horario||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,id);
+    db.prepare('UPDATE eventos SET titulo=?,descricao=?,data_evento=?,horario=?,local=?,vagas=?,gratuito=?,valor=?,ativo=?,pagina=? WHERE id=?')
+      .run(titulo,descricao||'',data_evento,horario||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,pg,id);
   } else {
-    db.prepare('INSERT INTO eventos (titulo,descricao,data_evento,horario,local,vagas,gratuito,valor,ativo) VALUES (?,?,?,?,?,?,?,?,?)')
-      .run(titulo,descricao||'',data_evento,horario||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0);
+    db.prepare('INSERT INTO eventos (titulo,descricao,data_evento,horario,local,vagas,gratuito,valor,ativo,pagina) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .run(titulo,descricao||'',data_evento,horario||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,pg);
   }
   res.json({ sucesso: true });
 });
@@ -280,14 +287,15 @@ app.get('/api/admin/cursos', auth, (_, res) => {
   res.json(db.prepare('SELECT * FROM cursos ORDER BY data_inicio DESC').all());
 });
 app.post('/api/admin/curso', auth, (req, res) => {
-  const { id, titulo, descricao, data_inicio, duracao, local, vagas, gratuito, valor, ativo } = req.body;
+  const { id, titulo, descricao, data_inicio, duracao, local, vagas, gratuito, valor, ativo, pagina } = req.body;
   if (!titulo || !data_inicio) return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+  const pg = ['geral','hfc','ambos'].includes(pagina) ? pagina : 'ambos';
   if (id) {
-    db.prepare('UPDATE cursos SET titulo=?,descricao=?,data_inicio=?,duracao=?,local=?,vagas=?,gratuito=?,valor=?,ativo=? WHERE id=?')
-      .run(titulo,descricao||'',data_inicio,duracao||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,id);
+    db.prepare('UPDATE cursos SET titulo=?,descricao=?,data_inicio=?,duracao=?,local=?,vagas=?,gratuito=?,valor=?,ativo=?,pagina=? WHERE id=?')
+      .run(titulo,descricao||'',data_inicio,duracao||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,pg,id);
   } else {
-    db.prepare('INSERT INTO cursos (titulo,descricao,data_inicio,duracao,local,vagas,gratuito,valor,ativo) VALUES (?,?,?,?,?,?,?,?,?)')
-      .run(titulo,descricao||'',data_inicio,duracao||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0);
+    db.prepare('INSERT INTO cursos (titulo,descricao,data_inicio,duracao,local,vagas,gratuito,valor,ativo,pagina) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .run(titulo,descricao||'',data_inicio,duracao||'',local||'',vagas||null,gratuito?1:0,valor||'',ativo?1:0,pg);
   }
   res.json({ sucesso: true });
 });

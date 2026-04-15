@@ -195,10 +195,11 @@ async function carregarLinksSociais() {
 async function carregarInscricoes() {
   const container = document.getElementById('linksEventos');
   if (!container) return;
+  const pg = IS_HFC ? 'hfc' : 'geral';
   try {
     const [resEv, resCr] = await Promise.all([
-      fetch('/api/eventos'),
-      fetch('/api/cursos'),
+      fetch(`/api/eventos?pagina=${pg}`),
+      fetch(`/api/cursos?pagina=${pg}`),
     ]);
     const eventos = await resEv.json();
     const cursos  = await resCr.json();

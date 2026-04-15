@@ -368,6 +368,7 @@ function editarEvento(e) {
   document.getElementById('eGratuito').checked = !!e.gratuito;
   document.getElementById('eAtivo').checked = !!e.ativo;
   document.getElementById('eValor').value = e.valor || '';
+  document.getElementById('ePagina').value = e.pagina || 'ambos';
   document.getElementById('eValorBox').classList.toggle('hidden', !!e.gratuito);
   abrirModal('modalEvento');
 }
@@ -385,6 +386,7 @@ async function salvarEvento(e) {
     gratuito: document.getElementById('eGratuito').checked,
     valor: document.getElementById('eValor').value,
     ativo: document.getElementById('eAtivo').checked,
+    pagina: document.getElementById('ePagina').value,
   });
   if (r.ok) { mostrarToast('Salvo!'); fecharModal('modalEvento'); carregarEventos(); document.getElementById('eId').value=''; }
   else mostrarToast('Erro ao salvar');
@@ -426,6 +428,7 @@ function editarCurso(e) {
   document.getElementById('crGratuito').checked = !!e.gratuito;
   document.getElementById('crAtivo').checked = !!e.ativo;
   document.getElementById('crValor').value = e.valor || '';
+  document.getElementById('crPagina').value = e.pagina || 'ambos';
   document.getElementById('crValorBox').classList.toggle('hidden', !!e.gratuito);
   abrirModal('modalCurso');
 }
@@ -443,6 +446,7 @@ async function salvarCurso(e) {
     gratuito: document.getElementById('crGratuito').checked,
     valor: document.getElementById('crValor').value,
     ativo: document.getElementById('crAtivo').checked,
+    pagina: document.getElementById('crPagina').value,
   });
   if (r.ok) { mostrarToast('Salvo!'); fecharModal('modalCurso'); carregarCursos(); document.getElementById('crId').value=''; }
   else mostrarToast('Erro ao salvar');
