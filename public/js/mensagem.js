@@ -114,36 +114,86 @@ function renderizarDevocional(d) {
 }
 
 // ── Navegação entre slides ─────────────────────────────────────────────────
-function irParaVideo() {
-  if (!devocionalAtual?.youtube_id) return;
-  paginaAtual = 1;
-  document.getElementById('sliderTrack').classList.add('on-video');
+function irParaPagina(pagina, animar = true) {
+  const track = document.getElementById('sliderTrack');
+  if (!animar) {
+    track.style.transition = 'none';
+    void track.offsetWidth;
+  }
+  track.dataset.pagina = pagina;
+  track.style.transform = `translateX(-${pagina * (100 / 3)}%)`;
+  if (!animar) {
+    void track.offsetWidth;
+    track.style.transition = '';
+  }
+  paginaAtual = pagina;
   atualizarDots();
 }
 
 function irParaDevo(animar = true) {
-  paginaAtual = 0;
-  const track = document.getElementById('sliderTrack');
-  if (!animar) {
-    track.style.transition = 'none';
-    track.classList.remove('on-video');
-    void track.offsetWidth;
-    track.style.transition = '';
-  } else {
-    track.classList.remove('on-video');
-  }
-  // Para o vídeo ao voltar
+  // Para o vídeo ao sair
   const player = document.getElementById('youtubePlayer');
-  if (player.src) {
-    player.src = player.src; // reset para pausar
-  }
-  atualizarDots();
+  if (player.src) player.src = player.src;
+  irParaPagina(0, animar);
+}
+
+function irParaVideo() {
+  if (!devocionalAtual?.youtube_id) { irParaLinks(); return; }
+  irParaPagina(1);
+}
+
+function irParaLinks() {
+  irParaPagina(2);
+  carregarLinksEventos();
 }
 
 function atualizarDots() {
   document.querySelectorAll('.pdot').forEach((dot, i) => {
     dot.classList.toggle('active', i === paginaAtual);
   });
+}
+
+// ── Carrega eventos e cursos na aba Links ──────────────────────────────────
+async function carregarLinksEventos() {
+  const container = document.getElementById('linksEventos');
+  if (!container) return;
+
+  try {
+    const [resEv, resCr] = await Promise.all([
+      fetch('/api/eventos'),
+      fetch('/api/cursos'),
+    ]);
+    const eventos = await resEv.json();
+    const cursos  = await resCr.json();
+    const todos   = [
+      ...eventos.map(e => ({ ...e, _tipo: 'evento' })),
+      ...cursos.map(c => ({ ...c, _tipo: 'curso' })),
+    ];
+
+    if (!todos.length) {
+      container.innerHTML = '<p class="links-empty">Nenhum evento ou curso aberto no momento.</p>';
+      return;
+    }
+
+    container.innerHTML = todos.map(item => {
+      const icone = item._tipo === 'curso' ? '🎓' : '🎟️';
+      const data  = item.data_evento || item.data_inicio;
+      const [a, m, d] = (data || '').split('-');
+      const dataFmt = data ? `${d}/${m}/${a}` : '';
+      const meta = [dataFmt, item.horario, item.local].filter(Boolean).join(' · ');
+      return `
+        <a class="link-event" href="/${item._tipo}/${item.id}">
+          <div class="link-event-icon">${icone}</div>
+          <div class="link-event-info">
+            <span class="link-event-name">${item.titulo}</span>
+            <span class="link-event-meta">${meta || (item._tipo === 'curso' ? 'Curso' : 'Evento')}</span>
+          </div>
+          <div class="link-arrow">›</div>
+        </a>`;
+    }).join('');
+  } catch {
+    container.innerHTML = '<p class="links-empty">Não foi possível carregar.</p>';
+  }
 }
 
 // ── Navegação por data ─────────────────────────────────────────────────────
@@ -200,19 +250,20 @@ async function copiarVersiculo() {
     if (bloqueado) return;
     const dx = startX - e.changedTouches[0].clientX;
     const dy = Math.abs(startY - e.changedTouches[0].clientY);
-
-    // Ignora se for scroll vertical
     if (dy > Math.abs(dx) * 0.8) return;
 
     if (Math.abs(dx) > 45) {
-      if (dx > 0 && paginaAtual === 0 && devocionalAtual?.youtube_id) {
-        irParaVideo();
-      } else if (dx < 0 && paginaAtual === 1) {
-        irParaDevo();
-      } else if (dx < 0 && paginaAtual === 0) {
-        navegarData(1);
-      } else if (dx > 0 && paginaAtual === 0) {
-        navegarData(-1);
+      if (dx > 0) {
+        // swipe esquerda → avança
+        if (paginaAtual === 0 && devocionalAtual?.youtube_id) irParaVideo();
+        else if (paginaAtual === 0) irParaLinks();
+        else if (paginaAtual === 1) irParaLinks();
+      } else {
+        // swipe direita → volta
+        if (paginaAtual === 2) {
+          if (devocionalAtual?.youtube_id) irParaVideo(); else irParaDevo();
+        } else if (paginaAtual === 1) irParaDevo();
+        else if (paginaAtual === 0) navegarData(-1);
       }
     }
   }, { passive: true });
@@ -222,7 +273,9 @@ async function copiarVersiculo() {
 document.querySelectorAll('.pdot').forEach(dot => {
   dot.addEventListener('click', () => {
     const pg = parseInt(dot.dataset.page);
-    pg === 0 ? irParaDevo() : irParaVideo();
+    if (pg === 0) irParaDevo();
+    else if (pg === 1) irParaVideo();
+    else irParaLinks();
   });
 });
 
