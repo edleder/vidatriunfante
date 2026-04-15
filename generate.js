@@ -21,7 +21,7 @@ async function gerarDevocional(data, tipo = 'geral') {
   console.log(`Gerando devocional ${tipo} para ${dataStr}...`);
 
   const contextoHFC = tipo === 'hfc'
-    ? 'Este devocional é especificamente para o grupo HFC (Homens de Fé e Caráter) — homens cristãos buscando ser líderes piedosos em suas famílias e comunidades. Aborde temas como paternidade, liderança servil, integridade, coragem e fé masculina.'
+    ? 'Este devocional é especificamente para o grupo HFC (Homens Fortes e Corajosos) — homens cristãos buscando ser líderes piedosos em suas famílias e comunidades. Aborde temas como paternidade, liderança servil, integridade, coragem e fé masculina.'
     : 'Este devocional é para todos os membros da igreja.';
 
   const prompt = `Você é um pastor evangélico brasileiro criando um devocional diário. ${contextoHFC}
