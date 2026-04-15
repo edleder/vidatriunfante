@@ -23,8 +23,7 @@
       </div>
       <div class="page-dots" id="pageDots">
         <span class="pdot active" data-page="0"></span>
-        <span class="pdot hidden" data-page="1" id="dotVideo"></span>
-        <span class="pdot" data-page="2" id="dotLinks"></span>
+        <span class="pdot" data-page="1" id="dotVideo"></span>
       </div>
     </header>
 
@@ -88,7 +87,7 @@
 
           </main>
 
-          <button class="video-arrow hidden" id="videoArrow" onclick="irParaVideo()" aria-label="Ver vídeo">
+          <button class="video-arrow" id="videoArrow" onclick="irParaVideo()" aria-label="Ver mais">
             <div class="video-arrow-inner">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 18 15 12 9 6"/>
@@ -98,20 +97,54 @@
           </button>
         </div>
 
-        <!-- Página 2: Vídeo -->
-        <div class="slide hidden" id="slideVideo">
+        <!-- Página 2: Vídeo + Conteúdo -->
+        <div class="slide" id="slideVideo">
           <div class="card video-card">
+
             <div class="card-hero video-hero">
               <div class="card-date" id="videoDate">—</div>
               <div class="versiculo-ref" id="videoRef">—</div>
             </div>
+
             <div class="card-body">
-              <div class="video-section-label"><span>Devocional HFC em Vídeo</span></div>
-              <div class="video-wrapper">
-                <iframe id="youtubePlayer" src="" frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen loading="lazy"></iframe>
+
+              <!-- Vídeo (só aparece quando tem youtube_id) -->
+              <div id="videoSection" class="hidden">
+                <div class="video-section-label"><span>Devocional HFC em Vídeo</span></div>
+                <div class="video-wrapper">
+                  <iframe id="youtubePlayer" src="" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen loading="lazy"></iframe>
+                </div>
               </div>
+
+              <!-- Redes Sociais -->
+              <div class="slide2-section">
+                <div class="section-label" style="margin-bottom:14px">
+                  <span class="section-label-text">Redes Sociais</span>
+                  <div class="section-label-line"></div>
+                </div>
+                <div class="links-grid" id="linksSociais"></div>
+              </div>
+
+              <!-- Inscrições -->
+              <div class="slide2-section" id="inscricoesSection">
+                <div class="section-label" style="margin-bottom:14px">
+                  <span class="section-label-text">Inscrições</span>
+                  <div class="section-label-line"></div>
+                </div>
+                <div id="linksEventos"></div>
+              </div>
+
+              <!-- Comunicados -->
+              <div class="slide2-section" id="anunciosSection">
+                <div class="section-label" style="margin-bottom:14px">
+                  <span class="section-label-text">Comunicados</span>
+                  <div class="section-label-line"></div>
+                </div>
+                <div id="anunciosLista"></div>
+              </div>
+
             </div>
           </div>
 
@@ -121,50 +154,6 @@
                 <polyline points="15 18 9 12 15 6"/>
               </svg>
               <span>Texto</span>
-            </div>
-          </button>
-
-          <button class="video-arrow" onclick="irParaLinks()" aria-label="Ver links">
-            <div class="video-arrow-inner">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-              <span>Links</span>
-            </div>
-          </button>
-        </div>
-
-        <!-- Página 3: Links -->
-        <div class="slide hidden" id="slideLinks">
-          <div class="card links-card">
-            <div class="card-hero">
-              <div class="card-date">• Conecte-se •</div>
-              <div class="versiculo-ref">Pastor Isaque</div>
-            </div>
-            <div class="card-body">
-              <!-- Redes sociais (carregado dinamicamente) -->
-              <div class="section-label" style="margin-bottom:14px">
-                <span class="section-label-text">Redes Sociais</span>
-                <div class="section-label-line"></div>
-              </div>
-              <div class="links-grid" id="linksSociais"></div>
-
-              <div class="section-label" style="margin:20px 0 14px">
-                <span class="section-label-text">Inscrições</span>
-                <div class="section-label-line"></div>
-              </div>
-              <div id="linksEventos">
-                <p class="links-empty">Nenhum evento ou curso aberto no momento.</p>
-              </div>
-            </div>
-          </div>
-
-          <button class="back-arrow" onclick="devocionalAtual?.youtube_id ? irParaVideo() : irParaDevo()" aria-label="Voltar">
-            <div class="video-arrow-inner">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="15 18 9 12 15 6"/>
-              </svg>
-              <span>Voltar</span>
             </div>
           </button>
         </div>

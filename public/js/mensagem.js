@@ -1,7 +1,7 @@
 // ── Estado ─────────────────────────────────────────────────────────────────
 let dataAtual       = dataHoje();
 let devocionalAtual = null;
-let paginaAtual     = 0; // 0 = devocional, 1 = vídeo
+let paginaAtual     = 0;
 const IS_HFC        = typeof HFC_MODE !== 'undefined' && HFC_MODE;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -32,15 +32,14 @@ function mostrarToast(msg, duracao = 2500) {
 async function carregarDevocional(data) {
   data = data || dataAtual;
 
-  const skeleton  = document.getElementById('skeletonCard');
-  const viewport  = document.getElementById('sliderViewport');
-  const error     = document.getElementById('errorCard');
+  const skeleton = document.getElementById('skeletonCard');
+  const viewport = document.getElementById('sliderViewport');
+  const error    = document.getElementById('errorCard');
 
   skeleton.classList.remove('hidden');
   viewport.classList.add('hidden');
   error.classList.add('hidden');
 
-  // Volta sempre para a página do devocional ao trocar de dia
   irParaDevo(false);
 
   try {
@@ -59,7 +58,6 @@ async function carregarDevocional(data) {
     skeleton.classList.add('hidden');
     viewport.classList.remove('hidden');
 
-    // Botão próximo
     const btnProximo = document.getElementById('btnProximo');
     if (btnProximo) {
       const isHoje = dataAtual === dataHoje();
@@ -67,44 +65,34 @@ async function carregarDevocional(data) {
       btnProximo.disabled = isHoje;
     }
 
-  } catch (err) {
+  } catch {
     skeleton.classList.add('hidden');
     error.classList.remove('hidden');
   }
 }
 
 function renderizarDevocional(d) {
-  // Página 1
-  document.getElementById('cardDate').textContent    = formatarDataBR(d.data);
-  document.getElementById('versiculoRef').textContent = d.versiculo_referencia;
+  document.getElementById('cardDate').textContent      = formatarDataBR(d.data);
+  document.getElementById('versiculoRef').textContent  = d.versiculo_referencia;
   document.getElementById('versiculoTexto').textContent = d.versiculo_texto;
-  document.getElementById('reflexao').textContent    = d.reflexao;
-  document.getElementById('pratica').textContent     = d.pratica;
-  document.getElementById('temaBadge').textContent   = d.tema || '';
+  document.getElementById('reflexao').textContent      = d.reflexao;
+  document.getElementById('pratica').textContent       = d.pratica;
+  document.getElementById('temaBadge').textContent     = d.tema || '';
 
-  // Página 2 (vídeo)
   document.getElementById('videoDate').textContent = formatarDataBR(d.data);
   document.getElementById('videoRef').textContent  = d.versiculo_referencia;
 
-  // Controla visibilidade da seta e slide de vídeo
-  const arrow     = document.getElementById('videoArrow');
-  const slideVid  = document.getElementById('slideVideo');
-  const dotVideo  = document.getElementById('dotVideo');
-  const player    = document.getElementById('youtubePlayer');
-
+  // Mostra/esconde só a seção de vídeo dentro do slide (não o slide inteiro)
+  const videoSection = document.getElementById('videoSection');
+  const player       = document.getElementById('youtubePlayer');
   if (d.youtube_id) {
     player.src = `https://www.youtube.com/embed/${d.youtube_id}`;
-    arrow.classList.remove('hidden');
-    slideVid.classList.remove('hidden');
-    dotVideo.classList.remove('hidden');
+    videoSection.classList.remove('hidden');
   } else {
     player.src = '';
-    arrow.classList.add('hidden');
-    slideVid.classList.add('hidden');
-    dotVideo.classList.add('hidden');
+    videoSection.classList.add('hidden');
   }
 
-  // Animação de entrada
   const card = document.getElementById('devocionalCard');
   card.classList.remove('card-enter');
   void card.offsetWidth;
@@ -121,7 +109,7 @@ function irParaPagina(pagina, animar = true) {
     void track.offsetWidth;
   }
   track.dataset.pagina = pagina;
-  track.style.transform = `translateX(-${pagina * (100 / 3)}%)`;
+  track.style.transform = `translateX(-${pagina * 50}%)`;
   if (!animar) {
     void track.offsetWidth;
     track.style.transition = '';
@@ -131,20 +119,14 @@ function irParaPagina(pagina, animar = true) {
 }
 
 function irParaDevo(animar = true) {
-  // Para o vídeo ao sair
   const player = document.getElementById('youtubePlayer');
-  if (player.src) player.src = player.src;
+  if (player && player.src) player.src = player.src; // pausa o vídeo
   irParaPagina(0, animar);
 }
 
 function irParaVideo() {
-  if (!devocionalAtual?.youtube_id) { irParaLinks(); return; }
   irParaPagina(1);
-}
-
-function irParaLinks() {
-  irParaPagina(2);
-  carregarLinksEventos();
+  carregarConteudoSlide2();
 }
 
 function atualizarDots() {
@@ -163,10 +145,11 @@ const ICONES_SVG = {
   link:      `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
 };
 
-// ── Carrega links sociais, eventos e cursos na aba Links ───────────────────
-async function carregarLinksEventos() {
+// ── Conteúdo da 2ª aba ────────────────────────────────────────────────────
+async function carregarConteudoSlide2() {
   carregarLinksSociais();
   carregarInscricoes();
+  carregarAnuncios();
 }
 
 async function carregarLinksSociais() {
@@ -175,24 +158,23 @@ async function carregarLinksSociais() {
   try {
     const res   = await fetch('/api/links');
     const links = await res.json();
-    if (links.length) {
-      container.innerHTML = links.map(lk => {
-        const icone  = ICONES_SVG[lk.icone] || ICONES_SVG.link;
-        const classe = ICONES_SVG[lk.icone] ? lk.icone : 'outro';
-        return `
-          <a class="link-item ${classe}" href="${lk.url}" target="_blank" rel="noopener">
-            <div class="link-icon">${icone}</div>
-            <div class="link-info"><span class="link-name">${lk.nome}</span></div>
-            <div class="link-arrow">›</div>
-          </a>`;
-      }).join('');
-    } else {
-      container.innerHTML = '';
-    }
-  } catch { container.innerHTML = ''; }
+    container.innerHTML = links.length
+      ? links.map(lk => {
+          const icone  = ICONES_SVG[lk.icone] || ICONES_SVG.link;
+          const classe = ICONES_SVG[lk.icone] ? lk.icone : 'outro';
+          return `
+            <a class="link-item ${classe}" href="${lk.url}" target="_blank" rel="noopener">
+              <div class="link-icon">${icone}</div>
+              <div class="link-info"><span class="link-name">${lk.nome}</span></div>
+              <div class="link-arrow">›</div>
+            </a>`;
+        }).join('')
+      : '';
+  } catch { /* silencioso */ }
 }
 
 async function carregarInscricoes() {
+  const section   = document.getElementById('inscricoesSection');
   const container = document.getElementById('linksEventos');
   if (!container) return;
   const pg = IS_HFC ? 'hfc' : 'geral';
@@ -224,22 +206,50 @@ async function carregarInscricoes() {
             <div class="link-arrow">›</div>
           </a>`;
       }).join('');
-    } else {
-      container.innerHTML = '<p class="links-empty">Nenhum evento ou curso aberto no momento.</p>';
+    } else if (section) {
+      section.classList.add('hidden');
     }
-  } catch { container.innerHTML = '<p class="links-empty">Não foi possível carregar.</p>'; }
+  } catch {
+    if (section) section.classList.add('hidden');
+  }
+}
+
+async function carregarAnuncios() {
+  const section = document.getElementById('anunciosSection');
+  const lista   = document.getElementById('anunciosLista');
+  if (!section || !lista) return;
+  try {
+    const [resAn, resCom] = await Promise.all([
+      fetch('/api/anuncios'),
+      fetch('/api/comunicados'),
+    ]);
+    const anuncios    = await resAn.json();
+    const comunicados = await resCom.json();
+    const todos = [
+      ...anuncios.map(a => ({ ...a, _tipo: 'anuncio' })),
+      ...comunicados.map(c => ({ ...c, _tipo: 'comunicado' })),
+    ];
+    if (todos.length) {
+      lista.innerHTML = todos.map(item => `
+        <div class="anuncio-item${(item.destaque || item.importante) ? ' destaque' : ''}">
+          <span class="anuncio-titulo">${item.titulo}</span>
+          <p class="anuncio-corpo">${item.conteudo}</p>
+        </div>`).join('');
+    } else {
+      section.classList.add('hidden');
+    }
+  } catch {
+    section.classList.add('hidden');
+  }
 }
 
 // ── Navegação por data ─────────────────────────────────────────────────────
 function navegarData(direcao) {
   const novaData = adicionarDias(dataAtual, direcao);
-  const hoje = dataHoje();
-
-  if (direcao > 0 && novaData > hoje) {
+  if (direcao > 0 && novaData > dataHoje()) {
     mostrarToast('Este é o devocional mais recente');
     return;
   }
-
   dataAtual = novaData;
   carregarDevocional(dataAtual);
 }
@@ -249,7 +259,6 @@ async function compartilhar() {
   if (!devocionalAtual) return;
   const texto = `📖 ${devocionalAtual.versiculo_referencia}\n\n"${devocionalAtual.versiculo_texto}"\n\n${devocionalAtual.reflexao}`;
   const url   = window.location.href;
-
   if (navigator.share) {
     try { await navigator.share({ title: 'Devocional', text: texto, url }); } catch {}
   } else {
@@ -272,33 +281,26 @@ async function copiarVersiculo() {
 
 // ── Swipe horizontal ───────────────────────────────────────────────────────
 (function swipe() {
-  let startX = 0, startY = 0, bloqueado = false;
+  let startX = 0, startY = 0;
 
   document.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    bloqueado = false;
   }, { passive: true });
 
   document.addEventListener('touchend', e => {
-    if (bloqueado) return;
     const dx = startX - e.changedTouches[0].clientX;
     const dy = Math.abs(startY - e.changedTouches[0].clientY);
     if (dy > Math.abs(dx) * 0.8) return;
+    if (Math.abs(dx) < 45) return;
 
-    if (Math.abs(dx) > 45) {
-      if (dx > 0) {
-        // swipe esquerda → avança
-        if (paginaAtual === 0 && devocionalAtual?.youtube_id) irParaVideo();
-        else if (paginaAtual === 0) irParaLinks();
-        else if (paginaAtual === 1) irParaLinks();
-      } else {
-        // swipe direita → volta
-        if (paginaAtual === 2) {
-          if (devocionalAtual?.youtube_id) irParaVideo(); else irParaDevo();
-        } else if (paginaAtual === 1) irParaDevo();
-        else if (paginaAtual === 0) navegarData(-1);
-      }
+    if (dx > 0) {
+      // swipe esquerda → avança
+      if (paginaAtual === 0) irParaVideo();
+    } else {
+      // swipe direita → volta
+      if (paginaAtual === 1) irParaDevo();
+      else if (paginaAtual === 0) navegarData(-1);
     }
   }, { passive: true });
 })();
@@ -306,10 +308,7 @@ async function copiarVersiculo() {
 // ── Dots clicáveis ─────────────────────────────────────────────────────────
 document.querySelectorAll('.pdot').forEach(dot => {
   dot.addEventListener('click', () => {
-    const pg = parseInt(dot.dataset.page);
-    if (pg === 0) irParaDevo();
-    else if (pg === 1) irParaVideo();
-    else irParaLinks();
+    parseInt(dot.dataset.page) === 0 ? irParaDevo() : irParaVideo();
   });
 });
 
