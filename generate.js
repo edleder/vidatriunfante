@@ -45,7 +45,7 @@ Importante:
 - A prática deve ser algo que qualquer pessoa possa fazer hoje
 - Varie os livros bíblicos ao longo dos dias`;
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   const result = await model.generateContent(prompt);
   const content = result.response.text().trim();
 
