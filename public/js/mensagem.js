@@ -147,9 +147,36 @@ const ICONES_SVG = {
 
 // ── Conteúdo da 2ª aba ────────────────────────────────────────────────────
 async function carregarConteudoSlide2() {
+  carregarLinksDevocional();
   carregarLinksSociais();
   carregarInscricoes();
   carregarAnuncios();
+}
+
+async function carregarLinksDevocional() {
+  const section   = document.getElementById('linksDevocionalSection');
+  const container = document.getElementById('linksDevocionalLista');
+  if (!section || !container) return;
+  try {
+    const base = IS_HFC ? '/api/hfc' : '/api/devocional';
+    const res  = await fetch(`${base}/${dataAtual}/links`);
+    const links = await res.json();
+    if (!links.length) { section.classList.add('hidden'); return; }
+    const icones = {
+      youtube:   ICONES_SVG.youtube,
+      instagram: ICONES_SVG.instagram,
+      site:      ICONES_SVG.link,
+    };
+    container.innerHTML = links.map(lk => `
+      <a class="link-item ${lk.link_tipo}" href="${lk.url}" target="_blank" rel="noopener">
+        <div class="link-icon">${icones[lk.link_tipo] || ICONES_SVG.link}</div>
+        <div class="link-info"><span class="link-name">${lk.titulo}</span></div>
+        <div class="link-arrow">›</div>
+      </a>`).join('');
+    section.classList.remove('hidden');
+  } catch {
+    section.classList.add('hidden');
+  }
 }
 
 async function carregarLinksSociais() {

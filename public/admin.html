@@ -230,6 +230,29 @@
       <div class="form-group"><label>Reflexão *</label><textarea id="dReflexao" rows="4" required></textarea></div>
       <div class="form-group"><label>Prática *</label><textarea id="dPratica" rows="3" required></textarea></div>
       <div class="form-group"><label>Vídeo YouTube (URL ou ID)</label><input type="text" id="dYoutube" placeholder="https://youtu.be/..."/></div>
+
+      <!-- Links extras -->
+      <div class="form-group" id="dLinksSection">
+        <label>Links Extras <span class="text-muted" style="font-weight:400;font-size:12px">(YouTube, Instagram, outros sites)</span></label>
+        <div id="dLinksContainer"></div>
+        <div id="dLinkForm" class="hidden" style="margin-top:8px">
+          <div class="form-row" style="gap:8px;margin-bottom:8px">
+            <select id="dLinkTipo" style="width:140px;flex-shrink:0">
+              <option value="youtube">YouTube</option>
+              <option value="instagram">Instagram</option>
+              <option value="site">Outro site</option>
+            </select>
+            <input type="text" id="dLinkTitulo" placeholder="Título do link" style="flex:1"/>
+          </div>
+          <div class="form-row" style="gap:8px">
+            <input type="url" id="dLinkUrl" placeholder="https://..." style="flex:1"/>
+            <button type="button" class="btn-primary" style="flex-shrink:0" onclick="salvarLinkDevocional()">✓ Salvar</button>
+            <button type="button" class="btn-secondary" style="flex-shrink:0" onclick="document.getElementById('dLinkForm').classList.add('hidden')">✕</button>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary" style="margin-top:8px" id="dBtnAddLink" onclick="mostrarFormLinkDevocional()">+ Adicionar Link</button>
+      </div>
+
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="fecharModal('modalDevocional')">Cancelar</button>
         <button type="submit" class="btn-primary">Salvar</button>

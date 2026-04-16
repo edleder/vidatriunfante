@@ -161,6 +161,16 @@ app.get('/api/oracao/publicos', (_, res) => {
   res.json(items);
 });
 
+// Links extras de um devocional (públicos)
+app.get('/api/devocional/:data/links', (req, res) => {
+  const items = db.prepare("SELECT * FROM devocional_links WHERE data=? AND tipo='geral' ORDER BY ordem, created_at").all(req.params.data);
+  res.json(items);
+});
+app.get('/api/hfc/:data/links', (req, res) => {
+  const items = db.prepare("SELECT * FROM devocional_links WHERE data=? AND tipo='hfc' ORDER BY ordem, created_at").all(req.params.data);
+  res.json(items);
+});
+
 // Links sociais (públicos)
 app.get('/api/links', (_, res) => {
   const items = db.prepare('SELECT * FROM links_sociais WHERE ativo = 1 ORDER BY ordem, nome').all();
@@ -346,6 +356,26 @@ app.post('/api/admin/agenda', auth, (req, res) => {
 });
 app.delete('/api/admin/agenda/:id', auth, (req, res) => {
   db.prepare('DELETE FROM agenda WHERE id=?').run(req.params.id);
+  res.json({ sucesso: true });
+});
+
+// ── Links de Devocional Admin ──
+app.get('/api/admin/devocional-links', auth, (req, res) => {
+  const { data, tipo } = req.query;
+  const items = db.prepare("SELECT * FROM devocional_links WHERE data=? AND tipo=? ORDER BY ordem, created_at").all(data, tipo || 'geral');
+  res.json(items);
+});
+app.post('/api/admin/devocional-link', auth, (req, res) => {
+  const { data, tipo, link_tipo, titulo, url, ordem } = req.body;
+  if (!data || !link_tipo || !titulo || !url) return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+  const tipos = ['youtube', 'instagram', 'site'];
+  if (!tipos.includes(link_tipo)) return res.status(400).json({ error: 'link_tipo inválido' });
+  db.prepare("INSERT INTO devocional_links (data,tipo,link_tipo,titulo,url,ordem) VALUES (?,?,?,?,?,?)")
+    .run(data, tipo || 'geral', link_tipo, titulo, url, ordem || 0);
+  res.json({ sucesso: true });
+});
+app.delete('/api/admin/devocional-link/:id', auth, (req, res) => {
+  db.prepare('DELETE FROM devocional_links WHERE id=?').run(req.params.id);
   res.json({ sucesso: true });
 });
 

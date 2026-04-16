@@ -101,6 +101,67 @@ function toggleValor(boxId) {
   if (cb) box.classList.toggle('hidden', cb.checked);
 }
 
+// ── Links por devocional ────────────────────────────────────────────────────
+let devoEditandoData = null;
+let devoEditandoTipo = 'geral';
+
+async function carregarLinksDevocional() {
+  const container = document.getElementById('dLinksContainer');
+  if (!container) return;
+  if (!devoEditandoData) {
+    container.innerHTML = '<p style="color:#888;font-size:13px;margin:4px 0">Salve o devocional antes de adicionar links.</p>';
+    document.getElementById('dBtnAddLink').classList.add('hidden');
+    return;
+  }
+  document.getElementById('dBtnAddLink').classList.remove('hidden');
+  try {
+    const r = await api('GET', `/api/admin/devocional-links?data=${devoEditandoData}&tipo=${devoEditandoTipo}`);
+    const links = await r.json();
+    renderLinksDevocional(links);
+  } catch { container.innerHTML = ''; }
+}
+
+function renderLinksDevocional(links) {
+  const container = document.getElementById('dLinksContainer');
+  const icons = { youtube: '▶️', instagram: '📷', site: '🔗' };
+  container.innerHTML = links.length
+    ? links.map(lk => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee">
+          <span style="font-size:14px">${icons[lk.link_tipo] || '🔗'}</span>
+          <span style="flex:1;font-size:13px"><strong>${lk.titulo}</strong> <span style="color:#888;font-size:11px">${lk.url.length > 40 ? lk.url.substring(0,40)+'…' : lk.url}</span></span>
+          <button type="button" class="btn-icon danger" onclick="deletarLinkDevocional(${lk.id})" title="Excluir">🗑️</button>
+        </div>`).join('')
+    : '<p style="color:#888;font-size:13px;margin:4px 0">Nenhum link adicionado.</p>';
+}
+
+function mostrarFormLinkDevocional() {
+  document.getElementById('dLinkForm').classList.remove('hidden');
+  document.getElementById('dLinkTitulo').focus();
+}
+
+async function salvarLinkDevocional() {
+  const link_tipo = document.getElementById('dLinkTipo').value;
+  const titulo    = document.getElementById('dLinkTitulo').value.trim();
+  const url       = document.getElementById('dLinkUrl').value.trim();
+  if (!titulo || !url) { mostrarToast('Preencha título e URL'); return; }
+  const r = await api('POST', '/api/admin/devocional-link', {
+    data: devoEditandoData, tipo: devoEditandoTipo, link_tipo, titulo, url,
+  });
+  if (r.ok) {
+    document.getElementById('dLinkForm').classList.add('hidden');
+    document.getElementById('dLinkTitulo').value = '';
+    document.getElementById('dLinkUrl').value = '';
+    carregarLinksDevocional();
+  } else mostrarToast('Erro ao salvar link');
+}
+
+async function deletarLinkDevocional(id) {
+  if (!confirm('Excluir este link?')) return;
+  const r = await api('DELETE', `/api/admin/devocional-link/${id}`);
+  if (r.ok) carregarLinksDevocional();
+  else mostrarToast('Erro ao excluir');
+}
+
 // ── Modais ─────────────────────────────────────────────────────────────────
 function abrirModal(id) {
   document.getElementById(id).classList.remove('hidden');
@@ -151,10 +212,14 @@ async function carregarDevocionais(tipo) {
 }
 
 function abrirFormDevocional(tipo) {
+  devoEditandoData = null;
+  devoEditandoTipo = tipo;
   document.getElementById('dTipo').value = tipo;
   document.getElementById('modalDevoTitulo').textContent = tipo === 'hfc' ? 'Devocional HFC' : 'Devocional Geral';
   document.getElementById('dData').value = new Date().toISOString().split('T')[0];
   ['dRef','dTexto','dReflexao','dPratica','dTema','dYoutube'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('dLinkForm').classList.add('hidden');
+  carregarLinksDevocional();
   abrirModal('modalDevocional');
 }
 
@@ -163,6 +228,8 @@ async function editarDevocional(data, tipo) {
   const r = await api('GET', `/api/${tabela}/${data}`);
   if (!r.ok) { mostrarToast('Erro ao carregar'); return; }
   const d = await r.json();
+  devoEditandoData = data;
+  devoEditandoTipo = tipo;
   document.getElementById('dTipo').value = tipo;
   document.getElementById('modalDevoTitulo').textContent = tipo === 'hfc' ? 'Devocional HFC' : 'Devocional Geral';
   document.getElementById('dData').value    = d.data;
@@ -172,6 +239,8 @@ async function editarDevocional(data, tipo) {
   document.getElementById('dPratica').value  = d.pratica;
   document.getElementById('dTema').value    = d.tema || '';
   document.getElementById('dYoutube').value = d.youtube_id ? `https://youtu.be/${d.youtube_id}` : '';
+  document.getElementById('dLinkForm').classList.add('hidden');
+  carregarLinksDevocional();
   abrirModal('modalDevocional');
 }
 

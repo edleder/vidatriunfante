@@ -142,6 +142,18 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  -- Links extras por devocional (YouTube, Instagram, sites)
+  CREATE TABLE IF NOT EXISTS devocional_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data TEXT NOT NULL,
+    tipo TEXT DEFAULT 'geral',
+    link_tipo TEXT NOT NULL,
+    titulo TEXT NOT NULL,
+    url TEXT NOT NULL,
+    ordem INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   -- Links de redes sociais e outros
   CREATE TABLE IF NOT EXISTS links_sociais (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
