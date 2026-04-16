@@ -1,10 +1,8 @@
 require('dotenv').config();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const db = require('./database');
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function gerarDevocional(data, tipo = 'geral') {
   const dataObj = data ? new Date(data + 'T12:00:00') : new Date();
@@ -25,8 +23,6 @@ async function gerarDevocional(data, tipo = 'geral') {
     : 'Este devocional é para todos os membros da igreja.';
 
   const prompt = `Você é um pastor evangélico brasileiro criando um devocional diário. ${contextoHFC}
-
-Você é um pastor evangélico brasileiro criando um devocional diário para membros de uma igreja.
 
 Gere um devocional completo para hoje (${dataStr}) com:
 1. Um versículo bíblico (preferencialmente do Novo Testamento ou Salmos)
@@ -49,18 +45,9 @@ Importante:
 - A prática deve ser algo que qualquer pessoa possa fazer hoje
 - Varie os livros bíblicos ao longo dos dias`;
 
-  const message = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-  });
-
-  const content = message.content[0].text.trim();
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const result = await model.generateContent(prompt);
+  const content = result.response.text().trim();
 
   // Extrai o JSON da resposta
   const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -83,7 +70,8 @@ Importante:
 // Executar se chamado diretamente
 if (require.main === module) {
   const data = process.argv[2]; // opcional: node generate.js 2026-04-16
-  gerarDevocional(data)
+  const tipo = process.argv[3] || 'geral'; // opcional: node generate.js 2026-04-16 hfc
+  gerarDevocional(data, tipo)
     .then(() => process.exit(0))
     .catch((err) => {
       console.error('Erro ao gerar devocional:', err);

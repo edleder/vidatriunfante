@@ -384,7 +384,7 @@ app.delete('/api/admin/oracao/:id', auth, (req, res) => {
 });
 
 // ── Cron ──────────────────────────────────────────────────────────────────────
-if (process.env.ANTHROPIC_API_KEY) {
+if (process.env.GEMINI_API_KEY) {
   cron.schedule('5 0 * * *', async () => {
     try { await gerarDevocional(null, 'geral'); } catch (e) { console.error('[CRON geral]', e.message); }
     try { await gerarDevocional(null, 'hfc');   } catch (e) { console.error('[CRON hfc]', e.message); }
