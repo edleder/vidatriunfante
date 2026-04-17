@@ -19,7 +19,7 @@ async function gerarDevocional(data, tipo = 'geral') {
   console.log(`Gerando devocional ${tipo} para ${dataStr}...`);
 
   // Busca versículos recentes para evitar repetição
-  const recentes = db.prepare(`SELECT versiculo_referencia FROM ${tabela} ORDER BY data DESC LIMIT 14`).all();
+  const recentes = db.prepare(`SELECT versiculo_referencia FROM ${tabela} ORDER BY data DESC LIMIT 30`).all();
   const versiculosUsados = recentes.map(r => r.versiculo_referencia).join(', ');
   const avisoRepeticao = versiculosUsados
     ? `\n\nVERSÍCULOS JÁ USADOS RECENTEMENTE (NÃO repita nenhum destes): ${versiculosUsados}`
