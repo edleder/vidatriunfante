@@ -18,6 +18,13 @@ async function gerarDevocional(data, tipo = 'geral') {
 
   console.log(`Gerando devocional ${tipo} para ${dataStr}...`);
 
+  // Busca versículos recentes para evitar repetição
+  const recentes = db.prepare(`SELECT versiculo_referencia FROM ${tabela} ORDER BY data DESC LIMIT 14`).all();
+  const versiculosUsados = recentes.map(r => r.versiculo_referencia).join(', ');
+  const avisoRepeticao = versiculosUsados
+    ? `\n\nVERSÍCULOS JÁ USADOS RECENTEMENTE (NÃO repita nenhum destes): ${versiculosUsados}`
+    : '';
+
   const contextoHFC = tipo === 'hfc'
     ? 'Este devocional é especificamente para o grupo HFC (Homens Fortes e Corajosos) — homens cristãos buscando ser líderes piedosos em suas famílias e comunidades. Aborde temas como paternidade, liderança servil, integridade, coragem e fé masculina.'
     : 'Este devocional é para todos os membros da igreja.';
@@ -43,7 +50,7 @@ Importante:
 - Use linguagem simples e acessível
 - A reflexão deve ser edificante e aplicável ao cotidiano
 - A prática deve ser algo que qualquer pessoa possa fazer hoje
-- Varie os livros bíblicos ao longo dos dias`;
+- Varie os livros bíblicos — explore Antigo e Novo Testamento, não fique apenas em Filipenses ou Salmos${avisoRepeticao}`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
