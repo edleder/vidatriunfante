@@ -60,7 +60,7 @@ async function iniciarAdmin() {
   ['dData','gData','loteInicio','agData','aInicio','cData','eData','crData'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = hoje;
   });
-  mostrarAba('devocional');
+  mostrarAba('dashboard');
 }
 
 // ── API ────────────────────────────────────────────────────────────────────
@@ -84,24 +84,30 @@ function toggleSidebar() {
 
 // ── Abas ───────────────────────────────────────────────────────────────────
 const ABA_TITULOS = {
+  dashboard: 'Dashboard',
   devocional: 'Devocional Geral', hfc: 'Devocional HFC', gerar: 'Gerar com IA',
   anuncios: 'Anúncios', comunicados: 'Comunicados',
   eventos: 'Eventos', cursos: 'Cursos',
   agenda: 'Agenda', oracao: 'Pedidos de Oração', playlists: 'Playlists YouTube',
-  links: 'Links & Redes Sociais', usuarios: 'Usuários',
+  links: 'Links & Redes Sociais',
+  usuarios: 'Usuários', configuracoes: 'Configurações', pulseiras: 'NFC / Pulseiras', logs: 'Logs de Acesso',
 };
 const ABA_LOADERS = {
-  devocional: () => carregarDevocionais('geral'),
-  hfc:        () => carregarDevocionais('hfc'),
-  anuncios:   carregarAnuncios,
-  comunicados:carregarComunicados,
-  eventos:    carregarEventos,
-  cursos:     carregarCursos,
-  agenda:     carregarAgenda,
-  oracao:     carregarOracao,
-  playlists:  carregarPlaylists,
-  links:      carregarLinks,
-  usuarios:   carregarUsuarios,
+  dashboard:    carregarDashboard,
+  devocional:   () => carregarDevocionais('geral'),
+  hfc:          () => carregarDevocionais('hfc'),
+  anuncios:     carregarAnuncios,
+  comunicados:  carregarComunicados,
+  eventos:      carregarEventos,
+  cursos:       carregarCursos,
+  agenda:       carregarAgenda,
+  oracao:       carregarOracao,
+  playlists:    carregarPlaylists,
+  links:        carregarLinks,
+  usuarios:     carregarUsuarios,
+  configuracoes:carregarConfiguracoes,
+  pulseiras:    carregarPulseiras,
+  logs:         carregarLogs,
 };
 
 function mostrarAba(nome) {
@@ -782,6 +788,157 @@ async function deletar(recurso, id, recarregar) {
   const r = await api('DELETE', `/api/admin/${recurso}/${id}`);
   if (r.ok) { mostrarToast('Excluído'); recarregar(); }
   else mostrarToast('Erro ao excluir');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════════
+async function carregarDashboard() {
+  const r = await api('GET', '/api/admin/dashboard');
+  if (!r.ok) return;
+  const d = await r.json();
+
+  const stats = [
+    { label: 'Devocionais Geral', valor: d.devocionais_geral, icon: '📖' },
+    { label: 'Devocionais HFC',   valor: d.devocionais_hfc,   icon: '🛡️' },
+    { label: 'Eventos Ativos',    valor: d.eventos_ativos,    icon: '🎟️' },
+    { label: 'Anúncios Ativos',   valor: d.anuncios_ativos,   icon: '📢' },
+    { label: 'Usuários Ativos',   valor: d.usuarios_ativos,   icon: '👥' },
+    { label: 'Orações Pendentes', valor: d.pedidos_pendentes, icon: '🙏' },
+  ];
+  document.getElementById('dashboardGrid').innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-valor">${s.valor}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+
+  document.getElementById('dashProximosEventos').innerHTML = d.proximos_eventos.length
+    ? d.proximos_eventos.map(e => `<div class="dash-row"><span>${fmtData(e.data_evento)}${e.horario?' '+e.horario:''}</span><strong>${e.titulo}</strong></div>`).join('')
+    : '<p class="text-muted" style="font-size:13px;padding:8px 0">Nenhum evento próximo.</p>';
+
+  document.getElementById('dashUltimosLogs').innerHTML = d.ultimos_logs.length
+    ? d.ultimos_logs.map(l => `<div class="dash-row"><span>${fmtDataHora(l.created_at)}</span><span><strong>${l.usuario_nome||'—'}</strong> · ${l.acao}</span></div>`).join('')
+    : '<p class="text-muted" style="font-size:13px;padding:8px 0">Nenhum acesso registrado.</p>';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES
+// ══════════════════════════════════════════════════════════════════════
+async function carregarConfiguracoes() {
+  const r = await api('GET', '/api/admin/configuracoes');
+  if (!r.ok) return;
+  const c = await r.json();
+  document.getElementById('cfgNomeIgreja').value = c.nome_igreja || '';
+  document.getElementById('cfgSiteUrl').value    = c.site_url    || '';
+  document.getElementById('cfgEmail').value      = c.contato_email    || '';
+  document.getElementById('cfgTelefone').value   = c.contato_telefone || '';
+}
+
+async function salvarConfiguracoes(e) {
+  e.preventDefault();
+  const r = await api('POST', '/api/admin/configuracoes', {
+    nome_igreja:       document.getElementById('cfgNomeIgreja').value,
+    site_url:          document.getElementById('cfgSiteUrl').value,
+    contato_email:     document.getElementById('cfgEmail').value,
+    contato_telefone:  document.getElementById('cfgTelefone').value,
+  });
+  if (r.ok) mostrarToast('Configurações salvas!');
+  else mostrarToast('Erro ao salvar');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// NFC / PULSEIRAS
+// ══════════════════════════════════════════════════════════════════════
+async function carregarPulseiras() {
+  const r = await api('GET', '/api/admin/pulseiras');
+  if (!r.ok) { document.getElementById('lista-pulseiras').innerHTML = '<p class="text-muted">Sem permissão.</p>'; return; }
+  const lista = await r.json();
+  const c = document.getElementById('lista-pulseiras');
+  if (!lista.length) { c.innerHTML = '<div class="data-table"><table><tr><td class="empty">Nenhuma pulseira cadastrada</td></tr></table></div>'; return; }
+  const base = window.location.origin;
+  c.innerHTML = `<div class="data-table"><table>
+    <thead><tr><th>Código</th><th>Nome</th><th>URL Destino</th><th>Link NFC</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>${lista.map(p => `<tr>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.nome}</strong>${p.descricao ? `<br><span class="text-muted">${p.descricao}</span>` : ''}</td>
+      <td>${p.url_destino}</td>
+      <td>
+        <button class="btn-icon" onclick="copiarTexto('${base}/p/${p.codigo}')" title="Copiar link NFC">📋</button>
+        <span class="text-muted" style="font-size:11px">/p/${p.codigo}</span>
+      </td>
+      <td><span class="badge ${p.ativo ? 'badge-green' : 'badge-gray'}">${p.ativo ? 'Ativa' : 'Inativa'}</span></td>
+      <td>
+        <button class="btn-icon" onclick='editarPulseira(${JSON.stringify(p)})' title="Editar">✏️</button>
+        <button class="btn-icon danger" onclick="deletar('pulseira',${p.id},carregarPulseiras)" title="Excluir">🗑️</button>
+      </td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function abrirModalPulseira() {
+  document.getElementById('pId').value = '';
+  ['pCodigo','pNome','pDescricao','pUrl'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pAtivo').checked = true;
+  document.getElementById('modalPulseiraTitulo').textContent = 'Nova Pulseira';
+  abrirModal('modalPulseira');
+}
+
+function editarPulseira(p) {
+  document.getElementById('pId').value      = p.id;
+  document.getElementById('pCodigo').value  = p.codigo;
+  document.getElementById('pNome').value    = p.nome;
+  document.getElementById('pDescricao').value = p.descricao || '';
+  document.getElementById('pUrl').value     = p.url_destino;
+  document.getElementById('pAtivo').checked = !!p.ativo;
+  document.getElementById('modalPulseiraTitulo').textContent = 'Editar Pulseira';
+  abrirModal('modalPulseira');
+}
+
+async function salvarPulseira(e) {
+  e.preventDefault();
+  const r = await api('POST', '/api/admin/pulseira', {
+    id:          document.getElementById('pId').value || null,
+    codigo:      document.getElementById('pCodigo').value.trim(),
+    nome:        document.getElementById('pNome').value,
+    descricao:   document.getElementById('pDescricao').value,
+    url_destino: document.getElementById('pUrl').value.trim(),
+    ativo:       document.getElementById('pAtivo').checked,
+  });
+  if (r.ok) { mostrarToast('Salvo!'); fecharModal('modalPulseira'); carregarPulseiras(); }
+  else { const j = await r.json(); mostrarToast(j.error || 'Erro ao salvar'); }
+}
+
+function copiarTexto(texto) {
+  navigator.clipboard.writeText(texto).then(() => mostrarToast('Link copiado!'));
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// LOGS
+// ══════════════════════════════════════════════════════════════════════
+async function carregarLogs(pagina = 1) {
+  const r = await api('GET', `/api/admin/logs?pagina=${pagina}`);
+  if (!r.ok) { document.getElementById('lista-logs').innerHTML = '<p class="text-muted">Sem permissão.</p>'; return; }
+  const { total, logs } = await r.json();
+  const c = document.getElementById('lista-logs');
+  if (!logs.length) { c.innerHTML = '<div class="data-table"><table><tr><td class="empty">Nenhum log registrado</td></tr></table></div>'; return; }
+  c.innerHTML = `
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">${total} registro(s) total</p>
+    <div class="data-table"><table>
+    <thead><tr><th>Usuário</th><th>Ação</th><th>Detalhes</th><th>IP</th><th>Data</th></tr></thead>
+    <tbody>${logs.map(l => `<tr>
+      <td><strong>${l.usuario_nome||'—'}</strong></td>
+      <td>${l.acao}</td>
+      <td>${l.detalhes||'—'}</td>
+      <td><span class="text-muted" style="font-size:11px">${l.ip||'—'}</span></td>
+      <td>${fmtDataHora(l.created_at)}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+async function limparLogs() {
+  if (!confirm('Excluir logs com mais de 30 dias?')) return;
+  const r = await api('DELETE', '/api/admin/logs?dias=30');
+  if (r.ok) { mostrarToast('Logs antigos excluídos'); carregarLogs(); }
+  else mostrarToast('Erro ao limpar logs');
 }
 
 // ══════════════════════════════════════════════════════════════════════

@@ -37,6 +37,9 @@
 
     <nav class="sidebar-nav">
       <div class="nav-group">
+        <a class="nav-item" onclick="mostrarAba('dashboard')" data-aba="dashboard">📊 Dashboard</a>
+      </div>
+      <div class="nav-group">
         <div class="nav-group-label">Palavra</div>
         <a class="nav-item" onclick="mostrarAba('devocional')"      data-aba="devocional">📖 Devocional Geral</a>
         <a class="nav-item" onclick="mostrarAba('hfc')"             data-aba="hfc">🛡️ Devocional HFC</a>
@@ -61,7 +64,10 @@
       </div>
       <div class="nav-group" id="navGrupoSistema" style="display:none">
         <div class="nav-group-label">Sistema</div>
-        <a class="nav-item" onclick="mostrarAba('usuarios')" data-aba="usuarios">👥 Usuários</a>
+        <a class="nav-item" onclick="mostrarAba('usuarios')"      data-aba="usuarios">👥 Usuários</a>
+        <a class="nav-item" onclick="mostrarAba('configuracoes')" data-aba="configuracoes">⚙️ Configurações</a>
+        <a class="nav-item" onclick="mostrarAba('pulseiras')"     data-aba="pulseiras">📡 NFC / Pulseiras</a>
+        <a class="nav-item" onclick="mostrarAba('logs')"          data-aba="logs">📋 Logs de Acesso</a>
       </div>
       <div class="nav-group">
         <a class="nav-item" href="/mensagem" target="_blank">👁️ Ver Devocional</a>
@@ -85,6 +91,22 @@
     </div>
 
     <main class="main-content">
+
+      <!-- ── Dashboard ── -->
+      <section class="aba hidden" id="aba-dashboard">
+        <div class="page-header"><h1>Dashboard</h1></div>
+        <div class="dashboard-grid" id="dashboardGrid"></div>
+        <div class="dashboard-two-col">
+          <div class="dash-section-card">
+            <h3>Próximos Eventos</h3>
+            <div id="dashProximosEventos"></div>
+          </div>
+          <div class="dash-section-card">
+            <h3>Últimos Acessos</h3>
+            <div id="dashUltimosLogs"></div>
+          </div>
+        </div>
+      </section>
 
       <!-- ── Devocional Geral ── -->
       <section class="aba hidden" id="aba-devocional">
@@ -215,6 +237,45 @@
         </div>
         <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">Estes links aparecem na terceira aba do devocional (e do HFC), na seção "Redes Sociais".</p>
         <div id="lista-links"></div>
+      </section>
+
+      <!-- ── Configurações ── -->
+      <section class="aba hidden" id="aba-configuracoes">
+        <div class="page-header"><h1>Configurações</h1></div>
+        <div class="form-card">
+          <form onsubmit="salvarConfiguracoes(event)">
+            <div class="form-group"><label>Nome da Igreja</label><input type="text" id="cfgNomeIgreja" placeholder="Igreja Vida Triunfante"/></div>
+            <div class="form-group"><label>Site da Igreja</label><input type="url" id="cfgSiteUrl" placeholder="https://..."/></div>
+            <div class="form-row">
+              <div class="form-group"><label>E-mail de contato</label><input type="email" id="cfgEmail" placeholder="contato@..."/></div>
+              <div class="form-group"><label>Telefone de contato</label><input type="text" id="cfgTelefone" placeholder="+55 11 9..."/></div>
+            </div>
+            <div style="margin-top:8px">
+              <button type="submit" class="btn-primary">💾 Salvar Configurações</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ── NFC / Pulseiras ── -->
+      <section class="aba hidden" id="aba-pulseiras">
+        <div class="page-header">
+          <h1>NFC / Pulseiras</h1>
+          <button class="btn-primary" onclick="abrirModalPulseira()">+ Nova Pulseira</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">
+          Programe os chips NFC com o link <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">seusite.com/p/:codigo</code> — o admin controla para onde cada código redireciona.
+        </p>
+        <div id="lista-pulseiras"></div>
+      </section>
+
+      <!-- ── Logs de Acesso ── -->
+      <section class="aba hidden" id="aba-logs">
+        <div class="page-header">
+          <h1>Logs de Acesso</h1>
+          <button class="btn-secondary" onclick="limparLogs()">🗑️ Limpar +30 dias</button>
+        </div>
+        <div id="lista-logs"></div>
       </section>
 
       <!-- ── Usuários ── -->
@@ -518,6 +579,30 @@
   <div class="modal-box large">
     <div class="modal-header"><h2 id="inscTitulo">Inscrições</h2><button onclick="fecharModal('modalInscricoes')">✕</button></div>
     <div id="listaInscricoes"></div>
+  </div>
+</div>
+
+<!-- Modal Pulseira -->
+<div class="modal hidden" id="modalPulseira">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalPulseiraTitulo">Nova Pulseira</h2>
+      <button onclick="fecharModal('modalPulseira')">✕</button>
+    </div>
+    <form onsubmit="salvarPulseira(event)">
+      <input type="hidden" id="pId"/>
+      <div class="form-row">
+        <div class="form-group"><label>Código único *</label><input type="text" id="pCodigo" placeholder="ex: geral, hfc, jovens" autocapitalize="none" required/></div>
+        <div class="form-group"><label>Status</label><label class="check-label mt"><input type="checkbox" id="pAtivo" checked/> Ativa</label></div>
+      </div>
+      <div class="form-group"><label>Nome *</label><input type="text" id="pNome" required/></div>
+      <div class="form-group"><label>Descrição</label><input type="text" id="pDescricao" placeholder="Opcional"/></div>
+      <div class="form-group"><label>URL de destino *</label><input type="text" id="pUrl" placeholder="ex: /mensagem ou https://..." required/></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalPulseira')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
   </div>
 </div>
 

@@ -176,6 +176,34 @@ db.exec(`
     FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
   );
 
+  -- Configurações do sistema
+  CREATE TABLE IF NOT EXISTS configuracoes (
+    chave TEXT PRIMARY KEY,
+    valor TEXT,
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  -- NFC Pulseiras / chips
+  CREATE TABLE IF NOT EXISTS pulseiras (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT UNIQUE NOT NULL,
+    nome TEXT NOT NULL,
+    descricao TEXT,
+    url_destino TEXT NOT NULL,
+    ativo INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  -- Logs de acesso ao painel
+  CREATE TABLE IF NOT EXISTS logs_acesso (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_nome TEXT,
+    acao TEXT NOT NULL,
+    detalhes TEXT,
+    ip TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   -- Links de redes sociais e outros
   CREATE TABLE IF NOT EXISTS links_sociais (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -201,6 +229,24 @@ const rowLinks = db.prepare('SELECT COUNT(*) as n FROM links_sociais').get();
 if (rowLinks.n === 0) {
   db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('Instagram', 'https://www.instagram.com/ap.isaqueoficial/', 'instagram', 1);
   db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('YouTube', 'https://www.youtube.com/@prisaqueoficial', 'youtube', 2);
+}
+
+// Seed configurações
+const cfgsDefault = [
+  ['nome_igreja', 'Igreja Vida Triunfante'],
+  ['site_url', 'https://www.vidatriunfante.com'],
+  ['contato_email', ''],
+  ['contato_telefone', ''],
+];
+cfgsDefault.forEach(([chave, valor]) => {
+  db.prepare("INSERT OR IGNORE INTO configuracoes (chave, valor) VALUES (?,?)").run(chave, valor);
+});
+
+// Seed pulseiras
+const rowPuls = db.prepare("SELECT COUNT(*) as n FROM pulseiras").get();
+if (rowPuls.n === 0) {
+  db.prepare("INSERT INTO pulseiras (codigo,nome,descricao,url_destino) VALUES (?,?,?,?)").run('geral','Devocional Geral','Pulseira padrão da congregação','/mensagem');
+  db.prepare("INSERT INTO pulseiras (codigo,nome,descricao,url_destino) VALUES (?,?,?,?)").run('hfc','HFC — Homens Fortes e Corajosos','Pulseira do grupo HFC','/hfc');
 }
 
 // Seed superadmin inicial

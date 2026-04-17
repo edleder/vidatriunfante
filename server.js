@@ -13,14 +13,18 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'ivt-admin-2026';
 const BASE_URL    = process.env.DOMAIN || `http://localhost:${PORT}`;
 
 const PERMISSOES_PERFIL = {
-  superadmin:  ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links','usuarios'],
-  apostolo:    ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links'],
-  editor:      ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos'],
-  visualizador:[],
+  superadmin:  ['dashboard','devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links','usuarios','configuracoes','pulseiras','logs'],
+  apostolo:    ['dashboard','devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links'],
+  editor:      ['dashboard','devocional','hfc','gerar','anuncios','comunicados','eventos','cursos'],
+  visualizador:['dashboard'],
 };
 
 function hashSenha(s) {
   return crypto.createHash('sha256').update(s + 'ivt-salt-2026').digest('hex');
+}
+
+function registrarLog(nomeUsuario, acao, detalhes, ip) {
+  try { db.prepare("INSERT INTO logs_acesso (usuario_nome,acao,detalhes,ip) VALUES (?,?,?,?)").run(nomeUsuario||'anônimo', acao, detalhes||'', ip||''); } catch {}
 }
 
 app.use(express.json());
@@ -58,6 +62,12 @@ function temPermissao(secao) {
     return res.status(403).json({ error: 'Sem permissão' });
   };
 }
+
+// ── NFC redirect ─────────────────────────────────────────────────────────────
+app.get('/p/:codigo', (req, res) => {
+  const p = db.prepare("SELECT url_destino FROM pulseiras WHERE codigo=? AND ativo=1").get(req.params.codigo);
+  res.redirect(p ? p.url_destino : '/mensagem');
+});
 
 // ── Páginas públicas ──────────────────────────────────────────────────────────
 app.get('/mensagem',       (_, res) => res.sendFile(path.join(__dirname, 'public/mensagem.html')));
@@ -251,6 +261,7 @@ app.delete('/api/admin/devocional/:data', auth, (req, res) => {
 app.post('/api/admin/gerar', auth, async (req, res) => {
   try {
     const d = await gerarDevocional(req.body.data, req.body.tipo);
+    registrarLog(req.usuario.nome, 'gerou devocional IA', `${req.body.tipo||'geral'} ${req.body.data||'hoje'}`, req.headers['x-forwarded-for']||req.socket.remoteAddress||'');
     res.json({ sucesso: true, devocional: d });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -432,6 +443,66 @@ app.delete('/api/admin/link/:id', auth, (req, res) => {
   res.json({ sucesso: true });
 });
 
+// ── Dashboard ──
+app.get('/api/admin/dashboard', auth, (req, res) => {
+  const hoje = dataHojeBR();
+  res.json({
+    devocionais_geral: db.prepare("SELECT COUNT(*) as n FROM devocionais").get().n,
+    devocionais_hfc:   db.prepare("SELECT COUNT(*) as n FROM devocionais_hfc").get().n,
+    eventos_ativos:    db.prepare("SELECT COUNT(*) as n FROM eventos WHERE ativo=1").get().n,
+    anuncios_ativos:   db.prepare("SELECT COUNT(*) as n FROM anuncios WHERE ativo=1 AND data_inicio<=? AND (data_fim IS NULL OR data_fim>=?)").get(hoje,hoje).n,
+    usuarios_ativos:   db.prepare("SELECT COUNT(*) as n FROM usuarios WHERE ativo=1").get().n,
+    pedidos_pendentes: db.prepare("SELECT COUNT(*) as n FROM pedidos_oracao WHERE respondido=0").get().n,
+    proximos_eventos:  db.prepare("SELECT titulo,data_evento,horario FROM eventos WHERE ativo=1 AND data_evento>=? ORDER BY data_evento LIMIT 5").all(hoje),
+    ultimos_logs:      db.prepare("SELECT usuario_nome,acao,created_at FROM logs_acesso ORDER BY created_at DESC LIMIT 8").all(),
+  });
+});
+
+// ── Configurações Admin ──
+app.get('/api/admin/configuracoes', auth, temPermissao('configuracoes'), (_, res) => {
+  const rows = db.prepare("SELECT chave,valor FROM configuracoes").all();
+  const obj = {}; rows.forEach(r => obj[r.chave] = r.valor);
+  res.json(obj);
+});
+app.post('/api/admin/configuracoes', auth, temPermissao('configuracoes'), (req, res) => {
+  const stmt = db.prepare("INSERT OR REPLACE INTO configuracoes (chave,valor,updated_at) VALUES (?,?,datetime('now'))");
+  Object.entries(req.body).forEach(([chave, valor]) => stmt.run(chave, valor||''));
+  registrarLog(req.usuario.nome, 'editou configurações', '', req.headers['x-forwarded-for']||req.socket.remoteAddress||'');
+  res.json({ sucesso: true });
+});
+
+// ── Pulseiras Admin ──
+app.get('/api/admin/pulseiras', auth, temPermissao('pulseiras'), (_, res) => {
+  res.json(db.prepare("SELECT * FROM pulseiras ORDER BY created_at").all());
+});
+app.post('/api/admin/pulseira', auth, temPermissao('pulseiras'), (req, res) => {
+  const { id, codigo, nome, descricao, url_destino, ativo } = req.body;
+  if (!codigo || !nome || !url_destino) return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+  if (id) {
+    db.prepare("UPDATE pulseiras SET codigo=?,nome=?,descricao=?,url_destino=?,ativo=? WHERE id=?").run(codigo,nome,descricao||'',url_destino,ativo?1:0,id);
+  } else {
+    db.prepare("INSERT INTO pulseiras (codigo,nome,descricao,url_destino,ativo) VALUES (?,?,?,?,?)").run(codigo,nome,descricao||'',url_destino,ativo?1:0);
+  }
+  res.json({ sucesso: true });
+});
+app.delete('/api/admin/pulseira/:id', auth, temPermissao('pulseiras'), (req, res) => {
+  db.prepare("DELETE FROM pulseiras WHERE id=?").run(req.params.id);
+  res.json({ sucesso: true });
+});
+
+// ── Logs Admin ──
+app.get('/api/admin/logs', auth, temPermissao('logs'), (req, res) => {
+  const p = parseInt(req.query.pagina) || 1;
+  const total = db.prepare("SELECT COUNT(*) as n FROM logs_acesso").get().n;
+  const logs  = db.prepare("SELECT * FROM logs_acesso ORDER BY created_at DESC LIMIT 50 OFFSET ?").all((p-1)*50);
+  res.json({ total, pagina: p, logs });
+});
+app.delete('/api/admin/logs', auth, temPermissao('logs'), (req, res) => {
+  const dias = parseInt(req.query.dias) || 30;
+  db.prepare(`DELETE FROM logs_acesso WHERE created_at < datetime('now','-${dias} days')`).run();
+  res.json({ sucesso: true });
+});
+
 // ── Auth Admin ──
 app.post('/api/admin/login', (req, res) => {
   const { usuario, senha } = req.body;
@@ -441,11 +512,13 @@ app.post('/api/admin/login', (req, res) => {
   const token = crypto.randomBytes(32).toString('hex');
   const expira = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
   db.prepare("INSERT INTO sessoes (usuario_id, token, expira_em) VALUES (?,?,?)").run(u.id, token, expira);
+  registrarLog(u.nome, 'login', u.usuario, req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
   res.json({ token, nome: u.nome, usuario: u.usuario, perfil: u.perfil, permissoes: PERMISSOES_PERFIL[u.perfil] || [] });
 });
 
 app.post('/api/admin/logout', auth, (req, res) => {
   const token = req.headers['x-admin-token'] || req.query.token;
+  registrarLog(req.usuario.nome, 'logout', '', req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
   db.prepare("DELETE FROM sessoes WHERE token = ?").run(token);
   res.json({ sucesso: true });
 });
