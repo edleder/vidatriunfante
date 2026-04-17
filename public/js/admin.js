@@ -51,8 +51,8 @@ async function iniciarAdmin() {
   document.getElementById('topbarPerfil').textContent = me.perfil;
   document.getElementById('topbarPerfil').className = `topbar-perfil-badge perfil-${me.perfil}`;
 
-  // Mostrar/ocultar menu Usuários
-  if (me.permissoes.includes('usuarios')) {
+  // Mostrar menu Usuários somente para superadmin
+  if (me.perfil === 'superadmin') {
     document.getElementById('navGrupoSistema').style.display = '';
   }
 
