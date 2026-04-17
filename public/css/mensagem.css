@@ -481,10 +481,9 @@ body {
   display: flex; align-items: center; gap: 14px; padding: 13px 16px;
   border-radius: 14px; text-decoration: none;
   transition: transform 0.15s, background 0.15s;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-body);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #1e1a12;
+  color: #f0ebe0;
 }
 .link-item:active { transform: scale(0.97); }
 .link-item:hover  { background: rgba(255,255,255,0.08); }
@@ -516,27 +515,27 @@ body {
 .link-event {
   display: flex; align-items: center; gap: 12px; padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(201,169,110,0.07);
-  border: 1px solid rgba(201,169,110,0.15);
-  text-decoration: none; color: var(--text-ink); margin-bottom: 8px;
+  background: #1e1a12;
+  border: 1px solid rgba(201,169,110,0.2);
+  text-decoration: none; color: #f0ebe0; margin-bottom: 8px;
   transition: transform 0.15s, background 0.15s;
 }
 .link-event:active { transform: scale(0.97); }
-.link-event:hover  { background: rgba(201,169,110,0.12); }
+.link-event:hover  { background: #261f13; }
 .link-event-icon   { font-size: 24px; flex-shrink: 0; }
 .link-event-info   { flex: 1; }
 .link-event-name   { font-size: 13px; font-weight: 700; display: block; margin-bottom: 2px; color: #f0ebe0; }
-.link-event-meta   { font-size: 11px; color: var(--text-muted); }
+.link-event-meta   { font-size: 11px; color: #8a7a68; }
 
 /* ── Anúncios ─────────────────────────────────────────────────────────────── */
 .anuncio-item {
   padding: 14px 16px; border-radius: 14px; margin-bottom: 10px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: #1e1a12;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 .anuncio-item.destaque {
-  background: rgba(201,169,110,0.08);
-  border-color: rgba(201,169,110,0.2);
+  background: #241d0e;
+  border-color: rgba(201,169,110,0.25);
 }
 .anuncio-titulo { font-size: 13px; font-weight: 700; color: #f0ebe0; display: block; margin-bottom: 5px; }
 .anuncio-corpo  { font-size: 13px; line-height: 1.65; color: #c4b8a4; margin: 0; }
