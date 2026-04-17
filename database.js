@@ -1,4 +1,5 @@
 const { DatabaseSync } = require('node:sqlite');
+const { createHash } = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
@@ -154,6 +155,27 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  -- Usuários do painel admin
+  CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    usuario TEXT UNIQUE NOT NULL,
+    senha_hash TEXT NOT NULL,
+    perfil TEXT DEFAULT 'visualizador',
+    ativo INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  -- Sessões de login
+  CREATE TABLE IF NOT EXISTS sessoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    criado_em TEXT DEFAULT (datetime('now')),
+    expira_em TEXT NOT NULL,
+    FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
+  );
+
   -- Links de redes sociais e outros
   CREATE TABLE IF NOT EXISTS links_sociais (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -179,6 +201,13 @@ const rowLinks = db.prepare('SELECT COUNT(*) as n FROM links_sociais').get();
 if (rowLinks.n === 0) {
   db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('Instagram', 'https://www.instagram.com/ap.isaqueoficial/', 'instagram', 1);
   db.prepare("INSERT INTO links_sociais (nome, url, icone, ordem) VALUES (?,?,?,?)").run('YouTube', 'https://www.youtube.com/@prisaqueoficial', 'youtube', 2);
+}
+
+// Seed superadmin inicial
+const rowAdmin = db.prepare("SELECT COUNT(*) as n FROM usuarios WHERE perfil = 'superadmin'").get();
+if (rowAdmin.n === 0) {
+  const hash = createHash('sha256').update('admin2026ivt-salt-2026').digest('hex');
+  db.prepare("INSERT INTO usuarios (nome, usuario, senha_hash, perfil) VALUES (?,?,?,?)").run('Administrador', 'admin', hash, 'superadmin');
 }
 
 // Seed devocional inicial

@@ -40,6 +40,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   border: 1px solid var(--border); box-shadow: var(--shadow-lg);
 }
 .login-logo { font-size: 28px; font-weight: 700; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 10px; }
+.login-logo-img { height: 52px; width: auto; margin-bottom: 16px; filter: invert(1) brightness(0.75) sepia(1) saturate(2) hue-rotate(0deg); opacity: .9; }
+.login-erro { padding: 10px 14px; background: rgba(220,60,60,.15); border: 1px solid rgba(220,60,60,.3); border-radius: 8px; color: #e08080; font-size: 13px; margin-bottom: 12px; text-align: left; }
 .login-card h2 { font-size: 17px; margin-bottom: 6px; color: var(--text); }
 .login-card > p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 .login-card input {
@@ -104,7 +106,18 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .menu-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); display: none; }
-.topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.topbar-logo { height: 28px; width: auto; opacity: .85; flex-shrink: 0; filter: invert(1) brightness(0.7); }
+.topbar-title { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+.topbar-user { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.topbar-user-name { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+.topbar-perfil-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px; background: var(--surface2);
+  border: 1px solid var(--border-light); color: var(--text-muted);
+}
+.topbar-perfil-badge.perfil-superadmin { background: rgba(201,100,100,.15); border-color: rgba(201,100,100,.35); color: #e08080; }
+.topbar-perfil-badge.perfil-pastor     { background: rgba(201,169,110,.15); border-color: rgba(201,169,110,.35); color: var(--gold); }
+.topbar-perfil-badge.perfil-editor     { background: rgba(100,150,220,.15); border-color: rgba(100,150,220,.35); color: #88aaee; }
 
 .main-content { flex: 1; overflow-y: auto; padding: 24px; }
 

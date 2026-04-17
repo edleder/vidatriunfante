@@ -13,12 +13,14 @@
 <!-- ── Login ─────────────────────────────────────────────────────────────── -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
-    <div class="login-logo">IVT</div>
+    <img src="/img/logo-black.png" alt="IVT" class="login-logo-img"/>
     <h2>Painel Administrativo</h2>
-    <p>Insira o token de acesso</p>
+    <p>Faça login para continuar</p>
     <form onsubmit="fazerLogin(event)">
-      <input type="password" id="tokenInput" placeholder="Token de acesso" autocomplete="current-password"/>
-      <button type="submit">Entrar</button>
+      <input type="text" id="loginUsuario" placeholder="Usuário" autocomplete="username" autocapitalize="none"/>
+      <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password"/>
+      <div id="loginErro" class="login-erro hidden"></div>
+      <button type="submit" id="loginBtn">Entrar</button>
     </form>
   </div>
 </div>
@@ -57,6 +59,10 @@
         <a class="nav-item" onclick="mostrarAba('playlists')"       data-aba="playlists">▶️ Playlists YouTube</a>
         <a class="nav-item" onclick="mostrarAba('links')"           data-aba="links">🔗 Links & Redes Sociais</a>
       </div>
+      <div class="nav-group" id="navGrupoSistema" style="display:none">
+        <div class="nav-group-label">Sistema</div>
+        <a class="nav-item" onclick="mostrarAba('usuarios')" data-aba="usuarios">👥 Usuários</a>
+      </div>
       <div class="nav-group">
         <a class="nav-item" href="/mensagem" target="_blank">👁️ Ver Devocional</a>
         <a class="nav-item" href="/hfc"      target="_blank">👁️ Ver HFC</a>
@@ -70,7 +76,12 @@
   <div class="main-wrapper">
     <div class="topbar">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <img src="/img/logo-black.png" alt="IVT" class="topbar-logo"/>
       <span class="topbar-title" id="topbarTitle">Devocional Geral</span>
+      <div class="topbar-user" id="topbarUser">
+        <span class="topbar-user-name" id="topbarNome"></span>
+        <span class="topbar-perfil-badge" id="topbarPerfil"></span>
+      </div>
     </div>
 
     <main class="main-content">
@@ -204,6 +215,18 @@
         </div>
         <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">Estes links aparecem na terceira aba do devocional (e do HFC), na seção "Redes Sociais".</p>
         <div id="lista-links"></div>
+      </section>
+
+      <!-- ── Usuários ── -->
+      <section class="aba hidden" id="aba-usuarios">
+        <div class="page-header">
+          <h1>Usuários</h1>
+          <button class="btn-primary" onclick="abrirModalUsuario()">+ Novo Usuário</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem">
+          Perfis: <strong>superadmin</strong> (acesso total) · <strong>pastor</strong> (sem gerenciar usuários) · <strong>editor</strong> (conteúdo e eventos) · <strong>visualizador</strong> (somente leitura)
+        </p>
+        <div id="lista-usuarios"></div>
       </section>
 
     </main>
@@ -495,6 +518,41 @@
   <div class="modal-box large">
     <div class="modal-header"><h2 id="inscTitulo">Inscrições</h2><button onclick="fecharModal('modalInscricoes')">✕</button></div>
     <div id="listaInscricoes"></div>
+  </div>
+</div>
+
+<!-- Modal Usuário -->
+<div class="modal hidden" id="modalUsuario">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalUsuarioTitulo">Novo Usuário</h2>
+      <button onclick="fecharModal('modalUsuario')">✕</button>
+    </div>
+    <form onsubmit="salvarUsuario(event)">
+      <input type="hidden" id="uId"/>
+      <div class="form-group"><label>Nome completo *</label><input type="text" id="uNome" required/></div>
+      <div class="form-group"><label>Usuário (login) *</label><input type="text" id="uUsuario" autocapitalize="none" required/></div>
+      <div class="form-group">
+        <label>Senha <span id="uSenhaHint" style="font-size:11px;color:var(--text-muted)">(obrigatória)</span></label>
+        <input type="password" id="uSenha" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label>Perfil *</label>
+        <select id="uPerfil">
+          <option value="visualizador">Visualizador</option>
+          <option value="editor">Editor</option>
+          <option value="pastor">Pastor</option>
+          <option value="superadmin">Superadmin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="check-label"><input type="checkbox" id="uAtivo" checked/> Usuário ativo</label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="fecharModal('modalUsuario')">Cancelar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
   </div>
 </div>
 

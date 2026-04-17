@@ -1,22 +1,61 @@
 // ── Auth ───────────────────────────────────────────────────────────────────
-let TOKEN = sessionStorage.getItem('ivt_admin_token') || '';
+let SESSION = JSON.parse(sessionStorage.getItem('ivt_admin_session') || 'null');
 
-function fazerLogin(e) {
+function TOKEN() { return SESSION?.token || ''; }
+
+async function fazerLogin(e) {
   e.preventDefault();
-  TOKEN = document.getElementById('tokenInput').value.trim();
-  sessionStorage.setItem('ivt_admin_token', TOKEN);
-  iniciarAdmin();
+  const btn  = document.getElementById('loginBtn');
+  const erro = document.getElementById('loginErro');
+  const usuario = document.getElementById('loginUsuario').value.trim();
+  const senha   = document.getElementById('loginSenha').value;
+  if (!usuario || !senha) return;
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  erro.classList.add('hidden');
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha }),
+    });
+    const data = await r.json();
+    if (!r.ok) { erro.textContent = data.error || 'Erro ao entrar'; erro.classList.remove('hidden'); return; }
+    SESSION = data;
+    sessionStorage.setItem('ivt_admin_session', JSON.stringify(SESSION));
+    iniciarAdmin();
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
 }
-function logout() {
-  TOKEN = ''; sessionStorage.removeItem('ivt_admin_token');
+
+async function logout() {
+  if (SESSION?.token) await api('POST', '/api/admin/logout').catch(() => {});
+  SESSION = null;
+  sessionStorage.removeItem('ivt_admin_session');
   document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
 }
+
 async function iniciarAdmin() {
-  const r = await api('GET', '/api/admin/devocionais');
-  if (!r.ok) { mostrarToast('Token inválido'); return; }
+  const r = await api('GET', '/api/admin/me');
+  if (!r.ok) { SESSION = null; sessionStorage.removeItem('ivt_admin_session'); mostrarToast('Sessão expirada'); return; }
+  const me = await r.json();
+  SESSION = { ...SESSION, ...me };
+  sessionStorage.setItem('ivt_admin_session', JSON.stringify(SESSION));
+
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('adminPanel').classList.remove('hidden');
+
+  // Topbar user info
+  document.getElementById('topbarNome').textContent = me.nome;
+  document.getElementById('topbarPerfil').textContent = me.perfil;
+  document.getElementById('topbarPerfil').className = `topbar-perfil-badge perfil-${me.perfil}`;
+
+  // Mostrar/ocultar menu Usuários
+  if (me.permissoes.includes('usuarios')) {
+    document.getElementById('navGrupoSistema').style.display = '';
+  }
+
   const hoje = new Date().toISOString().split('T')[0];
   ['dData','gData','loteInicio','agData','aInicio','cData','eData','crData'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = hoje;
@@ -26,7 +65,7 @@ async function iniciarAdmin() {
 
 // ── API ────────────────────────────────────────────────────────────────────
 async function api(method, path, body) {
-  const opts = { method, headers: { 'x-admin-token': TOKEN, 'Content-Type': 'application/json' } };
+  const opts = { method, headers: { 'x-admin-token': TOKEN(), 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
   return fetch(path, opts);
 }
@@ -49,7 +88,7 @@ const ABA_TITULOS = {
   anuncios: 'Anúncios', comunicados: 'Comunicados',
   eventos: 'Eventos', cursos: 'Cursos',
   agenda: 'Agenda', oracao: 'Pedidos de Oração', playlists: 'Playlists YouTube',
-  links: 'Links & Redes Sociais',
+  links: 'Links & Redes Sociais', usuarios: 'Usuários',
 };
 const ABA_LOADERS = {
   devocional: () => carregarDevocionais('geral'),
@@ -62,6 +101,7 @@ const ABA_LOADERS = {
   oracao:     carregarOracao,
   playlists:  carregarPlaylists,
   links:      carregarLinks,
+  usuarios:   carregarUsuarios,
 };
 
 function mostrarAba(nome) {
@@ -744,5 +784,76 @@ async function deletar(recurso, id, recarregar) {
   else mostrarToast('Erro ao excluir');
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// USUÁRIOS
+// ══════════════════════════════════════════════════════════════════════
+const PERFIL_LABELS = { superadmin: 'Superadmin', pastor: 'Pastor', editor: 'Editor', visualizador: 'Visualizador' };
+const PERFIL_BADGES = { superadmin: 'badge-red', pastor: 'badge-gold', editor: 'badge-blue', visualizador: 'badge-gray' };
+
+async function carregarUsuarios() {
+  const r = await api('GET', '/api/admin/usuarios');
+  if (!r.ok) { document.getElementById('lista-usuarios').innerHTML = '<p class="text-muted">Sem permissão.</p>'; return; }
+  const lista = await r.json();
+  const c = document.getElementById('lista-usuarios');
+  if (!lista.length) { c.innerHTML = '<div class="data-table"><table><tr><td class="empty">Nenhum usuário</td></tr></table></div>'; return; }
+  c.innerHTML = `<div class="data-table"><table>
+    <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>${lista.map(u => `<tr>
+      <td><strong>${u.nome}</strong></td>
+      <td><code>${u.usuario}</code></td>
+      <td><span class="badge ${PERFIL_BADGES[u.perfil] || 'badge-gray'}">${PERFIL_LABELS[u.perfil] || u.perfil}</span></td>
+      <td><span class="badge ${u.ativo ? 'badge-green' : 'badge-gray'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn-icon" onclick='editarUsuario(${JSON.stringify(u)})' title="Editar">✏️</button>
+        <button class="btn-icon danger" onclick="deletarUsuario(${u.id},'${u.nome}')" title="Excluir">🗑️</button>
+      </td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function abrirModalUsuario() {
+  document.getElementById('uId').value = '';
+  document.getElementById('uNome').value = '';
+  document.getElementById('uUsuario').value = '';
+  document.getElementById('uSenha').value = '';
+  document.getElementById('uPerfil').value = 'visualizador';
+  document.getElementById('uAtivo').checked = true;
+  document.getElementById('uSenhaHint').textContent = '(obrigatória)';
+  document.getElementById('modalUsuarioTitulo').textContent = 'Novo Usuário';
+  abrirModal('modalUsuario');
+}
+
+function editarUsuario(u) {
+  document.getElementById('uId').value = u.id;
+  document.getElementById('uNome').value = u.nome;
+  document.getElementById('uUsuario').value = u.usuario;
+  document.getElementById('uSenha').value = '';
+  document.getElementById('uPerfil').value = u.perfil;
+  document.getElementById('uAtivo').checked = !!u.ativo;
+  document.getElementById('uSenhaHint').textContent = '(deixe em branco para não alterar)';
+  document.getElementById('modalUsuarioTitulo').textContent = 'Editar Usuário';
+  abrirModal('modalUsuario');
+}
+
+async function salvarUsuario(e) {
+  e.preventDefault();
+  const r = await api('POST', '/api/admin/usuario', {
+    id: document.getElementById('uId').value || null,
+    nome: document.getElementById('uNome').value,
+    usuario: document.getElementById('uUsuario').value,
+    senha: document.getElementById('uSenha').value || undefined,
+    perfil: document.getElementById('uPerfil').value,
+    ativo: document.getElementById('uAtivo').checked,
+  });
+  if (r.ok) { mostrarToast('Salvo!'); fecharModal('modalUsuario'); carregarUsuarios(); }
+  else { const j = await r.json(); mostrarToast(j.error || 'Erro ao salvar'); }
+}
+
+async function deletarUsuario(id, nome) {
+  if (!confirm(`Excluir usuário "${nome}"?`)) return;
+  const r = await api('DELETE', `/api/admin/usuario/${id}`);
+  if (r.ok) { mostrarToast('Excluído'); carregarUsuarios(); }
+  else { const j = await r.json(); mostrarToast(j.error || 'Erro ao excluir'); }
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
-if (TOKEN) iniciarAdmin();
+if (SESSION?.token) iniciarAdmin();

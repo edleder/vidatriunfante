@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path    = require('path');
+const crypto  = require('crypto');
 const cron    = require('node-cron');
 const QRCode  = require('qrcode');
 const db      = require('./database');
@@ -10,6 +11,17 @@ const app   = express();
 const PORT  = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'ivt-admin-2026';
 const BASE_URL    = process.env.DOMAIN || `http://localhost:${PORT}`;
+
+const PERMISSOES_PERFIL = {
+  superadmin:  ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links','usuarios'],
+  pastor:      ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links'],
+  editor:      ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos'],
+  visualizador:[],
+};
+
+function hashSenha(s) {
+  return crypto.createHash('sha256').update(s + 'ivt-salt-2026').digest('hex');
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,8 +35,28 @@ function dataHojeBR() {
 
 function auth(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
-  if (token !== ADMIN_TOKEN) return res.status(401).json({ error: 'Não autorizado' });
+  if (!token) return res.status(401).json({ error: 'Não autorizado' });
+  // Legacy token fallback
+  if (token === ADMIN_TOKEN) {
+    req.usuario = { id: 0, nome: 'Admin', usuario: 'admin', perfil: 'superadmin' };
+    return next();
+  }
+  // Session-based auth
+  const sessao = db.prepare(`
+    SELECT s.token, u.id, u.nome, u.usuario, u.perfil, u.ativo
+    FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id
+    WHERE s.token = ? AND s.expira_em > datetime('now')
+  `).get(token);
+  if (!sessao || !sessao.ativo) return res.status(401).json({ error: 'Não autorizado' });
+  req.usuario = sessao;
   next();
+}
+
+function temPermissao(secao) {
+  return (req, res, next) => {
+    if ((PERMISSOES_PERFIL[req.usuario?.perfil] || []).includes(secao)) return next();
+    return res.status(403).json({ error: 'Sem permissão' });
+  };
 }
 
 // ── Páginas públicas ──────────────────────────────────────────────────────────
@@ -397,6 +429,58 @@ app.post('/api/admin/link', auth, (req, res) => {
 });
 app.delete('/api/admin/link/:id', auth, (req, res) => {
   db.prepare('DELETE FROM links_sociais WHERE id=?').run(req.params.id);
+  res.json({ sucesso: true });
+});
+
+// ── Auth Admin ──
+app.post('/api/admin/login', (req, res) => {
+  const { usuario, senha } = req.body;
+  if (!usuario || !senha) return res.status(400).json({ error: 'Campos obrigatórios' });
+  const u = db.prepare("SELECT * FROM usuarios WHERE usuario = ? AND ativo = 1").get(usuario);
+  if (!u || u.senha_hash !== hashSenha(senha)) return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+  const token = crypto.randomBytes(32).toString('hex');
+  const expira = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+  db.prepare("INSERT INTO sessoes (usuario_id, token, expira_em) VALUES (?,?,?)").run(u.id, token, expira);
+  res.json({ token, nome: u.nome, usuario: u.usuario, perfil: u.perfil, permissoes: PERMISSOES_PERFIL[u.perfil] || [] });
+});
+
+app.post('/api/admin/logout', auth, (req, res) => {
+  const token = req.headers['x-admin-token'] || req.query.token;
+  db.prepare("DELETE FROM sessoes WHERE token = ?").run(token);
+  res.json({ sucesso: true });
+});
+
+app.get('/api/admin/me', auth, (req, res) => {
+  const { nome, usuario, perfil } = req.usuario;
+  res.json({ nome, usuario, perfil, permissoes: PERMISSOES_PERFIL[perfil] || [] });
+});
+
+// ── Usuários Admin ──
+app.get('/api/admin/usuarios', auth, temPermissao('usuarios'), (_, res) => {
+  const lista = db.prepare("SELECT id, nome, usuario, perfil, ativo, created_at FROM usuarios ORDER BY perfil, nome").all();
+  res.json(lista);
+});
+
+app.post('/api/admin/usuario', auth, temPermissao('usuarios'), (req, res) => {
+  const { id, nome, usuario, senha, perfil, ativo } = req.body;
+  const perfisValidos = ['superadmin', 'pastor', 'editor', 'visualizador'];
+  if (!nome || !usuario || !perfisValidos.includes(perfil)) return res.status(400).json({ error: 'Dados inválidos' });
+  if (id) {
+    const sets = ['nome=?', 'usuario=?', 'perfil=?', 'ativo=?'];
+    const vals = [nome, usuario, perfil, ativo ? 1 : 0];
+    if (senha) { sets.push('senha_hash=?'); vals.push(hashSenha(senha)); }
+    vals.push(id);
+    db.prepare(`UPDATE usuarios SET ${sets.join(',')} WHERE id=?`).run(...vals);
+  } else {
+    if (!senha) return res.status(400).json({ error: 'Senha obrigatória para novo usuário' });
+    db.prepare("INSERT INTO usuarios (nome, usuario, senha_hash, perfil, ativo) VALUES (?,?,?,?,?)").run(nome, usuario, hashSenha(senha), perfil, ativo ? 1 : 0);
+  }
+  res.json({ sucesso: true });
+});
+
+app.delete('/api/admin/usuario/:id', auth, temPermissao('usuarios'), (req, res) => {
+  if (String(req.usuario.id) === req.params.id) return res.status(400).json({ error: 'Não é possível excluir o próprio usuário' });
+  db.prepare("DELETE FROM usuarios WHERE id=?").run(req.params.id);
   res.json({ sucesso: true });
 });
 
