@@ -3,6 +3,24 @@ let dataAtual       = dataHoje();
 let devocionalAtual = null;
 let paginaAtual     = 0;
 const IS_HFC        = typeof HFC_MODE !== 'undefined' && HFC_MODE;
+let _twTimer        = null;
+
+// ── Typewriter ─────────────────────────────────────────────────────────────
+function typewriter(el, text, speed = 16) {
+  if (_twTimer) clearTimeout(_twTimer);
+  el.textContent = '';
+  el.classList.add('typewriting');
+  let i = 0;
+  function step() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      _twTimer = setTimeout(step, speed);
+    } else {
+      el.classList.remove('typewriting');
+    }
+  }
+  step();
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function dataHoje() {
@@ -74,7 +92,7 @@ async function carregarDevocional(data) {
 function renderizarDevocional(d) {
   document.getElementById('cardDate').textContent      = formatarDataBR(d.data);
   document.getElementById('versiculoRef').textContent  = d.versiculo_referencia;
-  document.getElementById('versiculoTexto').textContent = d.versiculo_texto;
+  typewriter(document.getElementById('versiculoTexto'), d.versiculo_texto);
   document.getElementById('reflexao').textContent      = d.reflexao;
   document.getElementById('pratica').textContent       = d.pratica;
   document.getElementById('temaBadge').textContent     = d.tema || '';
