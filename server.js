@@ -14,7 +14,7 @@ const BASE_URL    = process.env.DOMAIN || `http://localhost:${PORT}`;
 
 const PERMISSOES_PERFIL = {
   superadmin:  ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links','usuarios'],
-  pastor:      ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links'],
+  apostolo:    ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos','agenda','oracao','playlists','links'],
   editor:      ['devocional','hfc','gerar','anuncios','comunicados','eventos','cursos'],
   visualizador:[],
 };
@@ -463,7 +463,7 @@ app.get('/api/admin/usuarios', auth, temPermissao('usuarios'), (_, res) => {
 
 app.post('/api/admin/usuario', auth, temPermissao('usuarios'), (req, res) => {
   const { id, nome, usuario, senha, perfil, ativo } = req.body;
-  const perfisValidos = ['superadmin', 'pastor', 'editor', 'visualizador'];
+  const perfisValidos = ['superadmin', 'apostolo', 'editor', 'visualizador'];
   if (!nome || !usuario || !perfisValidos.includes(perfil)) return res.status(400).json({ error: 'Dados inválidos' });
   if (id) {
     const sets = ['nome=?', 'usuario=?', 'perfil=?', 'ativo=?'];

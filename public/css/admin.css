@@ -116,7 +116,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
   border: 1px solid var(--border-light); color: var(--text-muted);
 }
 .topbar-perfil-badge.perfil-superadmin { background: rgba(201,100,100,.15); border-color: rgba(201,100,100,.35); color: #e08080; }
-.topbar-perfil-badge.perfil-pastor     { background: rgba(201,169,110,.15); border-color: rgba(201,169,110,.35); color: var(--gold); }
+.topbar-perfil-badge.perfil-apostolo   { background: rgba(201,169,110,.15); border-color: rgba(201,169,110,.35); color: var(--gold); }
 .topbar-perfil-badge.perfil-editor     { background: rgba(100,150,220,.15); border-color: rgba(100,150,220,.35); color: #88aaee; }
 
 .main-content { flex: 1; overflow-y: auto; padding: 24px; }

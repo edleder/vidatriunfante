@@ -787,8 +787,8 @@ async function deletar(recurso, id, recarregar) {
 // ══════════════════════════════════════════════════════════════════════
 // USUÁRIOS
 // ══════════════════════════════════════════════════════════════════════
-const PERFIL_LABELS = { superadmin: 'Superadmin', pastor: 'Pastor', editor: 'Editor', visualizador: 'Visualizador' };
-const PERFIL_BADGES = { superadmin: 'badge-red', pastor: 'badge-gold', editor: 'badge-blue', visualizador: 'badge-gray' };
+const PERFIL_LABELS = { superadmin: 'Superadmin', apostolo: 'Apóstolo', editor: 'Editor', visualizador: 'Visualizador' };
+const PERFIL_BADGES = { superadmin: 'badge-red', apostolo: 'badge-gold', editor: 'badge-blue', visualizador: 'badge-gray' };
 
 async function carregarUsuarios() {
   const r = await api('GET', '/api/admin/usuarios');
