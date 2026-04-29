@@ -32,10 +32,12 @@ app.use(express.json());
 // Redirect sem www para www
 app.use((req, res, next) => {
   const host = req.get('host');
-  console.log(`Host header: ${host}`);
-  if (host && host.startsWith('vidatriunfante.com') && !host.startsWith('www')) {
-    console.log(`Redirecting ${host} to www.${host}`);
-    return res.redirect(301, `${req.protocol}://www.${host}${req.originalUrl}`);
+  const hostname = host?.split(':')[0]; // Remove porta se existir
+  console.log(`Host header: ${host}, Hostname: ${hostname}`);
+  if (hostname === 'vidatriunfante.com') {
+    const newHost = `www.${hostname}${host.includes(':') ? ':' + host.split(':')[1] : ''}`;
+    console.log(`Redirecting to ${newHost}`);
+    return res.redirect(301, `${req.protocol}://${newHost}${req.originalUrl}`);
   }
   next();
 });
